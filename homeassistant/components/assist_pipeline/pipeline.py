@@ -77,6 +77,7 @@ from .error import (
     WakeWordTimeoutError,
 )
 from .vad import AudioBuffer, VoiceActivityTimeout, VoiceCommandSegmenter, chunk_samples
+from ..wake_word import DetectionResult
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -751,45 +752,7 @@ class PipelineRun:
 
         _LOGGER.debug("wake-word-detection result %s", result)
 
-        if result is None:
-            wake_word_output: dict[str, Any] = {}
-        else:
-            # Avoid duplicate detections by checking cooldown
-            last_wake_up = self.hass.data[DATA_LAST_WAKE_UP].get(
-                result.wake_word_phrase
-            )
-            if last_wake_up is not None:
-                sec_since_last_wake_up = time.monotonic() - last_wake_up
-                if sec_since_last_wake_up < WAKE_WORD_COOLDOWN:
-                    _LOGGER.debug(
-                        "Duplicate wake word detection occurred for %s",
-                        result.wake_word_phrase,
-                    )
-                    raise DuplicateWakeUpDetectedError(result.wake_word_phrase)
-
-            # Record last wake up time to block duplicate detections
-            self.hass.data[DATA_LAST_WAKE_UP][result.wake_word_phrase] = (
-                time.monotonic()
-            )
-
-            if result.queued_audio:
-                # Add audio that was pending at detection.
-                #
-                # Because detection occurs *after* the wake word was actually
-                # spoken, we need to make sure pending audio is forwarded to
-                # speech-to-text so the user does not have to pause before
-                # speaking the voice command.
-                audio_chunks_for_stt.extend(
-                    EnhancedAudioChunk(
-                        audio=chunk_ts[0], timestamp_ms=chunk_ts[1], is_speech=False
-                    )
-                    for chunk_ts in result.queued_audio
-                )
-
-            wake_word_output = asdict(result)
-
-            # Remove non-JSON fields
-            wake_word_output.pop("queued_audio", None)
+        wake_word_output = self._process_wake_word_result(result, audio_chunks_for_stt)
 
         self.process_event(
             PipelineEvent(
@@ -799,6 +762,32 @@ class PipelineRun:
         )
 
         return result
+
+    def _process_wake_word_result(
+        self,
+        result: DetectionResult,
+        audio_chunks_for_stt: list[EnhancedAudioChunk]
+    ):
+        if result is None:
+            return {}
+
+        last_wake_up = self.hass.data[DATA_LAST_WAKE_UP].get(result.wake_word_phrase)
+        if last_wake_up is not None and (time.monotonic() - last_wake_up) < WAKE_WORD_COOLDOWN:
+            _LOGGER.debug("Duplicate wake word detection occurred for %s", result.wake_word_phrase)
+            raise DuplicateWakeUpDetectedError(result.wake_word_phrase)
+
+        self.hass.data[DATA_LAST_WAKE_UP][result.wake_word_phrase] = time.monotonic()
+
+        if result.queued_audio:
+            audio_chunks_for_stt.extend(
+                EnhancedAudioChunk(audio=chunk_ts[0], timestamp_ms=chunk_ts[1], is_speech=False)
+                for chunk_ts in result.queued_audio
+            )
+
+        wake_word_output = asdict(result)
+        wake_word_output.pop("queued_audio", None)
+
+        return wake_word_output
 
     async def _wake_word_audio_stream(
         self,
@@ -1301,6 +1290,20 @@ def _pipeline_debug_recording_thread_proc(
             wav_writer.close()
 
 
+async def buffer_then_audio_stream(stt_audio_buffer, stt_processed_stream
+                                   ) -> AsyncGenerator[EnhancedAudioChunk]:
+    # Send audio in the buffer first to speech-to-text, then move on to stt_stream.
+    # This is basically an async itertools.chain.
+    # Buffered audio
+    for chunk in stt_audio_buffer:
+        yield chunk
+
+    # Streamed audio
+    assert stt_processed_stream is not None
+    async for chunk in stt_processed_stream:
+        yield chunk
+
+
 @dataclass
 class PipelineInput:
     """Input to a pipeline run."""
@@ -1325,6 +1328,48 @@ class PipelineInput:
     conversation_id: str | None = None
 
     device_id: str | None = None
+
+    def try_wake_up(self):
+        # Avoid duplicate wake-ups by checking cooldown
+        last_wake_up = self.run.hass.data[DATA_LAST_WAKE_UP].get(
+            self.wake_word_phrase
+        )
+        if last_wake_up is not None:
+            sec_since_last_wake_up = time.monotonic() - last_wake_up
+            if sec_since_last_wake_up < WAKE_WORD_COOLDOWN:
+                _LOGGER.debug(
+                    "Speech-to-text cancelled to avoid duplicate wake-up for %s",
+                    self.wake_word_phrase,
+                )
+                raise DuplicateWakeUpDetectedError(self.wake_word_phrase)
+
+        # Record last wake up time to block duplicate detections
+        self.run.hass.data[DATA_LAST_WAKE_UP][self.wake_word_phrase] = (
+            time.monotonic()
+        )
+    async def handle_intent_and_tts(self, current_stage, intent_input):
+        if self.run.end_stage != PipelineStage.STT:
+            tts_input = self.tts_input
+
+            if current_stage == PipelineStage.INTENT:
+                # intent-recognition
+                assert intent_input is not None
+                tts_input = await self.run.recognize_intent(
+                    intent_input,
+                    self.conversation_id,
+                    self.device_id,
+                )
+                if tts_input.strip():
+                    current_stage = PipelineStage.TTS
+                else:
+                    # Skip TTS
+                    current_stage = PipelineStage.END
+
+            if self.run.end_stage != PipelineStage.INTENT:
+                # text-to-speech
+                if current_stage == PipelineStage.TTS:
+                    assert tts_input is not None
+                    await self.run.text_to_speech(tts_input)
 
     async def execute(self) -> None:
         """Run pipeline."""
@@ -1360,43 +1405,16 @@ class PipelineInput:
                 assert self.stt_metadata is not None
                 assert stt_processed_stream is not None
 
-                if self.wake_word_phrase is not None:
-                    # Avoid duplicate wake-ups by checking cooldown
-                    last_wake_up = self.run.hass.data[DATA_LAST_WAKE_UP].get(
-                        self.wake_word_phrase
-                    )
-                    if last_wake_up is not None:
-                        sec_since_last_wake_up = time.monotonic() - last_wake_up
-                        if sec_since_last_wake_up < WAKE_WORD_COOLDOWN:
-                            _LOGGER.debug(
-                                "Speech-to-text cancelled to avoid duplicate wake-up for %s",
-                                self.wake_word_phrase,
-                            )
-                            raise DuplicateWakeUpDetectedError(self.wake_word_phrase)
+                # Attempt to wake up for speech recognition
 
-                    # Record last wake up time to block duplicate detections
-                    self.run.hass.data[DATA_LAST_WAKE_UP][self.wake_word_phrase] = (
-                        time.monotonic()
-                    )
+                if self.wake_word_phrase is not None:
+                    self.try_wake_up()
 
                 stt_input_stream = stt_processed_stream
 
                 if stt_audio_buffer:
                     # Send audio in the buffer first to speech-to-text, then move on to stt_stream.
-                    # This is basically an async itertools.chain.
-                    async def buffer_then_audio_stream() -> (
-                        AsyncGenerator[EnhancedAudioChunk]
-                    ):
-                        # Buffered audio
-                        for chunk in stt_audio_buffer:
-                            yield chunk
-
-                        # Streamed audio
-                        assert stt_processed_stream is not None
-                        async for chunk in stt_processed_stream:
-                            yield chunk
-
-                    stt_input_stream = buffer_then_audio_stream()
+                    buffer_then_audio_stream(stt_audio_buffer, stt_processed_stream)
 
                 intent_input = await self.run.speech_to_text(
                     self.stt_metadata,
@@ -1404,28 +1422,8 @@ class PipelineInput:
                 )
                 current_stage = PipelineStage.INTENT
 
-            if self.run.end_stage != PipelineStage.STT:
-                tts_input = self.tts_input
-
-                if current_stage == PipelineStage.INTENT:
-                    # intent-recognition
-                    assert intent_input is not None
-                    tts_input = await self.run.recognize_intent(
-                        intent_input,
-                        self.conversation_id,
-                        self.device_id,
-                    )
-                    if tts_input.strip():
-                        current_stage = PipelineStage.TTS
-                    else:
-                        # Skip TTS
-                        current_stage = PipelineStage.END
-
-                if self.run.end_stage != PipelineStage.INTENT:
-                    # text-to-speech
-                    if current_stage == PipelineStage.TTS:
-                        assert tts_input is not None
-                        await self.run.text_to_speech(tts_input)
+            # Handle voice intent and TTS
+            await self.handle_intent_and_tts(current_stage,intent_input)
 
         except PipelineError as err:
             self.run.process_event(
@@ -1547,10 +1545,8 @@ class PipelineStorageCollection(StorageCollection):
         if not (data := await super()._async_load_data()):
             pipeline = await _async_create_default_pipeline(self.hass, self)
             self._preferred_item = pipeline.id
-            return data
-
-        self._preferred_item = data["preferred_item"]
-
+        else:
+            self._preferred_item = data["preferred_item"]
         return data
 
     async def _process_create_data(self, data: dict) -> dict:

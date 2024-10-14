@@ -51,6 +51,7 @@ class AuthProvider:
     """Provider of user authentication."""
 
     DEFAULT_TITLE = "Unnamed auth provider"
+    support_mfa = True  # Added this line to replace the samr name method,to Refactoring always return(True)
 
     def __init__(
         self, hass: HomeAssistant, store: AuthStore, config: dict[str, Any]
@@ -77,11 +78,6 @@ class AuthProvider:
     def name(self) -> str:
         """Return the name of the auth provider."""
         return self.config.get(CONF_NAME, self.DEFAULT_TITLE)  # type: ignore[no-any-return]
-
-    @property
-    def support_mfa(self) -> bool:
-        """Return whether multi-factor auth supported by the auth provider."""
-        return True
 
     async def async_credentials(self) -> list[Credentials]:
         """Return all credentials of this provider."""
