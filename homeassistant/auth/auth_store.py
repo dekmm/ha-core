@@ -394,6 +394,13 @@ class AuthStore:
 
         return users
 
+    def _get_token_type(self, rt_dict) -> str:
+        if "token_type" in rt_dict:
+            return rt_dict["token_type"]
+        if rt_dict["client_id"] is None:
+            return models.TOKEN_TYPE_SYSTEM
+        return models.TOKEN_TYPE_NORMAL
+
     def _refresh_tokens(self, data, users, credentials) -> None:
         for rt_dict in data["refresh_tokens"]:
             # Filter out the old keys that don't have jwt_key (pre-0.76)
@@ -411,11 +418,7 @@ class AuthStore:
                 )
                 continue
 
-            if (token_type := rt_dict.get("token_type")) is None:
-                if rt_dict["client_id"] is None:
-                    token_type = models.TOKEN_TYPE_SYSTEM
-                else:
-                    token_type = models.TOKEN_TYPE_NORMAL
+            token_type = self._get_token_type(rt_dict)
 
             # old refresh_token don't have last_used_at (pre-0.78)
             if last_used_at_str := rt_dict.get("last_used_at"):
