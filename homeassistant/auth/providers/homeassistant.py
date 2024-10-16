@@ -156,14 +156,19 @@ class Data:
         """Return users."""
         assert self._data is not None
         return self._data["users"]
+       
+        # Precompute the bcrypt hash of the dummy password to avoid recalculating every time
+    
+    
+class Auth:
+    DUMMY_PASSWORD = os.environ.get("DUMMY_PASSWORD", "dummy_password")
+    DUMMY_HASH = bcrypt.hashpw(DUMMY_PASSWORD.encode(), bcrypt.gensalt())
 
     def validate_login(self, username: str, password: str) -> None:
         """Validate a username and password.
-
         Raises InvalidAuth if auth invalid.
         """
         username = self.normalize_username(username)
-        dummy = bcrypt.hashpw ( b"dummy_password", bcrypt.gensalt())
         found = None
 
         # Compare all users to avoid timing attacks.
@@ -173,7 +178,7 @@ class Data:
 
         if found is None:
             # check a hash to make timing the same as if user was found
-            bcrypt.checkpw(b"dummy", dummy)
+            bcrypt.checkpw(b"dummy".encode(), self.DUMMY_HASH)  # Use self.DUMMY_HASH
             raise InvalidAuth
 
         user_hash = base64.b64decode(found["password"])
@@ -181,6 +186,10 @@ class Data:
         # bcrypt.checkpw is timing-safe
         if not bcrypt.checkpw(password.encode(), user_hash):
             raise InvalidAuth
+
+
+   
+
 
     def hash_password(self, password: str, for_storage: bool = False) -> bytes:
         """Encode a password."""
