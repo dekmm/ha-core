@@ -5,8 +5,6 @@ from __future__ import annotations
 from dataclasses import dataclass
 import logging
 
-from accuweather import AccuWeather
-
 from homeassistant.components.sensor import DOMAIN as SENSOR_PLATFORM
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_NAME, Platform
@@ -14,6 +12,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
+from .api import AccuWeatherExt
 from .const import DOMAIN, UPDATE_INTERVAL_DAILY_FORECAST, UPDATE_INTERVAL_OBSERVATION
 from .coordinator import (
     AccuWeatherDailyForecastDataUpdateCoordinator,
@@ -46,7 +45,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: AccuWeatherConfigEntry) 
     _LOGGER.debug("Using location_key: %s", location_key)
 
     websession = async_get_clientsession(hass)
-    accuweather = AccuWeather(api_key, websession, location_key=location_key)
+    accuweather = AccuWeatherExt(api_key, websession, location_key=location_key)
 
     coordinator_observation = AccuWeatherObservationDataUpdateCoordinator(
         hass,
