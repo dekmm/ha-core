@@ -5,7 +5,7 @@ from datetime import timedelta
 import logging
 from typing import TYPE_CHECKING, Any
 
-from accuweather import AccuWeather, ApiError, InvalidApiKeyError, RequestsExceededError
+from accuweather import ApiError, InvalidApiKeyError, RequestsExceededError
 from aiohttp.client_exceptions import ClientConnectorError
 
 from homeassistant.core import HomeAssistant
@@ -16,6 +16,7 @@ from homeassistant.helpers.update_coordinator import (
     UpdateFailed,
 )
 
+from .api import AccuWeatherExt
 from .const import DOMAIN, MANUFACTURER
 
 EXCEPTIONS = (ApiError, ClientConnectorError, InvalidApiKeyError, RequestsExceededError)
@@ -31,7 +32,7 @@ class AccuWeatherObservationDataUpdateCoordinator(
     def __init__(
         self,
         hass: HomeAssistant,
-        accuweather: AccuWeather,
+        accuweather: AccuWeatherExt,
         name: str,
         coordinator_type: str,
         update_interval: timedelta,
@@ -73,7 +74,7 @@ class AccuWeatherDailyForecastDataUpdateCoordinator(
     def __init__(
         self,
         hass: HomeAssistant,
-        accuweather: AccuWeather,
+        accuweather: AccuWeatherExt,
         name: str,
         coordinator_type: str,
         update_interval: timedelta,
