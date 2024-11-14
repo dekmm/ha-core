@@ -1,6 +1,6 @@
 """Client for getting weather and index data from AccueWeather API."""
 
-from dataclasses import dataclass
+from collections import defaultdict
 from enum import Enum, StrEnum
 from http import HTTPStatus
 import logging
@@ -13,21 +13,6 @@ import orjson
 BASE_URL: str = "https://dataservice.accuweather.com/"
 
 _LOGGER = logging.getLogger(__name__)
-
-
-@dataclass
-class IndexData:
-    """Index data."""
-
-    name: str
-    id: int
-    ascending: bool
-    local_date_time: str
-    epoch_date_time: int
-    value: float
-    category: str
-    category_value: int
-    text: str
 
 
 class IndexRange(StrEnum):
@@ -219,7 +204,7 @@ class AccuWeatherExt(AccuWeather):
 
     async def async_get_index_data(
         self, index_id: Index, range: IndexRange = IndexRange.ONE_DAY
-    ) -> list[IndexData]:
+    ) -> list[dict[str, dict[str, Any]]]:
         """Retrieve index data from AccuWeather."""
         if not self._location_key:
             await self.async_get_location()
@@ -234,11 +219,11 @@ class AccuWeatherExt(AccuWeather):
 
         data = await self._async_get_list_data(url)
 
-        return list(map(_parse_index_data, data))
+        return _parse_index_data(data)
 
     async def async_get_index_group_data(
         self, index_id: IndexGroup, range: IndexRange = IndexRange.ONE_DAY
-    ) -> list[IndexData]:
+    ) -> list[dict[str, dict[str, Any]]]:
         """Retrieve index group data from AccuWeather."""
         if not self._location_key:
             await self.async_get_location()
@@ -252,7 +237,7 @@ class AccuWeatherExt(AccuWeather):
         )
 
         data = await self._async_get_list_data(url)
-        return list(map(_parse_index_data, data))
+        return _parse_index_data(data)
 
     async def _async_get_list_data(self, url: str) -> list[Any]:
         """Retrieve data from AccuWeather API."""
@@ -286,15 +271,20 @@ class AccuWeatherExt(AccuWeather):
         return data
 
 
-def _parse_index_data(data: dict[str, Any]) -> IndexData:
-    return IndexData(
-        name=str(data.get("Name", "N/A")),
-        id=int(data.get("ID", -1)),
-        ascending=bool(data.get("Ascending", True)),
-        local_date_time=str(data.get("LocalDateTime", "N/A")),
-        epoch_date_time=int(data.get("EpochDateTime", -1)),
-        value=float(data.get("Value", -1.0)),
-        category=str(data.get("Category", "N/A")),
-        category_value=int(data.get("CategoryValue", -1)),
-        text=str(data.get("Text", "N/A")),
-    )
+def _parse_index_data(data: list[dict[str, Any]]) -> list[dict[str, dict[str, Any]]]:
+    data.sort(key=lambda x: x["EpochDateTime"])
+
+    grouped_data: dict[str, dict[str, Any]] = defaultdict(dict)
+    for item in data:
+        item.pop("ID")
+        item.pop("Ascending")
+        item.pop("LocalDateTime")
+        item.pop("Link")
+        item.pop("MobileLink")
+
+        name = item.pop("Name")
+        date = item.pop("EpochDateTime")
+
+        grouped_data[date][name] = item
+
+    return list(grouped_data.values())

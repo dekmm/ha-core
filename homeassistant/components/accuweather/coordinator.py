@@ -16,7 +16,7 @@ from homeassistant.helpers.update_coordinator import (
     UpdateFailed,
 )
 
-from .api import AccuWeatherExt, IndexData, IndexGroup
+from .api import AccuWeatherExt, IndexGroup
 from .const import DOMAIN, MANUFACTURER
 
 EXCEPTIONS = (ApiError, ClientConnectorError, InvalidApiKeyError, RequestsExceededError)
@@ -67,7 +67,7 @@ class AccuWeatherObservationDataUpdateCoordinator(
 
 
 class AccuWeatherIndexGroupDataUpdateCoordinator(
-    TimestampDataUpdateCoordinator[list[IndexData]]
+    TimestampDataUpdateCoordinator[list[dict[str, dict[str, Any]]]]
 ):
     """Class to manage fetching AccuWeather data API."""
 
@@ -98,7 +98,7 @@ class AccuWeatherIndexGroupDataUpdateCoordinator(
             update_interval=update_interval,
         )
 
-    async def _async_update_data(self) -> list[IndexData]:
+    async def _async_update_data(self) -> list[dict[str, dict[str, Any]]]:
         """Update data via library."""
         try:
             async with timeout(10):
