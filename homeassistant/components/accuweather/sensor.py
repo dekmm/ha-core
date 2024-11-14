@@ -72,6 +72,27 @@ INDEX_SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
         ],  # The category values the sensor can obtain (found in API Index description)
         translation_key="healthy_heart_fitness_forecast",  # Not sure what this does or if it's needed
     ),
+    AccuWeatherSensorDescription(
+        key="Dust & Dander Forecast",
+        value_fn=lambda data: cast(str, data[ATTR_CATEGORY]),
+        device_class=SensorDeviceClass.ENUM,
+        options=["Extreme", "Very High", "High", "Moderate", "Low"],
+        translation_key="dust_and_dander_forecast",
+    ),
+    AccuWeatherSensorDescription(
+        key="Arthritis Pain Forecast",
+        value_fn=lambda data: cast(str, data[ATTR_CATEGORY]),
+        device_class=SensorDeviceClass.ENUM,
+        options=["At Extreme Risk", "At High Risk", "At Risk", "Neutral", "Beneficial"],
+        translation_key="arthritis_pain_forecast",
+    ),
+    AccuWeatherSensorDescription(
+        key="Asthma Forecast",
+        value_fn=lambda data: cast(str, data[ATTR_CATEGORY]),
+        device_class=SensorDeviceClass.ENUM,
+        options=["At Extreme Risk", "At High Risk", "At Risk", "Neutral", "Beneficial"],
+        translation_key="asthma_forecast",
+    ),
 )
 
 FORECAST_SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
