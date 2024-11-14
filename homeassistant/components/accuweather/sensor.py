@@ -56,6 +56,24 @@ class AccuWeatherSensorDescription(SensorEntityDescription):
     attr_fn: Callable[[dict[str, Any]], dict[str, Any]] = lambda _: {}
 
 
+INDEX_SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
+    AccuWeatherSensorDescription(
+        key="Healthy Heart Fitness Forecast",  # The key used by the API for the sensor
+        value_fn=lambda data: cast(
+            str, data[ATTR_CATEGORY]
+        ),  # If we want to display value e.g. 5.8, or the category value e.g. Good
+        device_class=SensorDeviceClass.ENUM,
+        options=[
+            "Excellent",
+            "Very Good",
+            "Good",
+            "Fair",
+            "Poor",
+        ],  # The category values the sensor can obtain (found in API Index description)
+        translation_key="healthy_heart_fitness_forecast",  # Not sure what this does or if it's needed
+    ),
+)
+
 FORECAST_SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
     AccuWeatherSensorDescription(
         key="AirQuality",
