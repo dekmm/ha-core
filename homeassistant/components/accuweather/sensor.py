@@ -72,7 +72,7 @@ INDEX_SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
             "Fair",
             "Poor",
         ],  # The category values the sensor can obtain (found in API Index description)
-        translation_key="healthy_heart_fitness_forecast",  # Not sure what this does or if it's needed
+        translation_key="healthy_heart_fitness_forecast",
     ),
     AccuWeatherSensorDescription(
         key="Dust & Dander Forecast",
@@ -608,9 +608,9 @@ class AccuWeatherIndexSensor(
         self.async_write_ha_state()
 
     @staticmethod
-    def _get_sensor_data(sensors: list[dict[str, dict[str, Any]]], kind: str) -> Any:
+    def _get_sensor_data(
+        sensors: list[dict[str, dict[str, Any]]],
+        kind: str,
+    ) -> Any:
         """Get sensor data."""
-        # Ensure sensors[0] is the main data dictionary
-        if sensors and isinstance(sensors[0], dict):
-            return sensors[0].get(kind)
-        return None  # Return None if the data isn't structured as expected
+        return sensors[0][kind]

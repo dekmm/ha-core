@@ -219,6 +219,18 @@
       },
       "wind_speed_night": {
         "name": "Wind speed night {forecast_day}"
+      },
+      "healthy_heart_fitness_forecast": {
+        "name": "Healthy Heart Fitness Forecast"
+      },
+      "dust_and_dander_forecast": {
+        "name": "Dust & Dander Forecast"
+      },
+      "asthma_forecast": {
+        "name": "Asthma Forecast"
+      },
+      "arthritis_pain_forecast": {
+        "name": "Arthritis Pain Forecast"
       }
     }
   },
