@@ -42,6 +42,7 @@ from .const import (
 )
 from .coordinator import (
     AccuWeatherDailyForecastDataUpdateCoordinator,
+    AccuWeatherIndexGroupDataUpdateCoordinator,
     AccuWeatherObservationDataUpdateCoordinator,
 )
 
@@ -59,6 +60,7 @@ class AccuWeatherSensorDescription(SensorEntityDescription):
 INDEX_SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
     AccuWeatherSensorDescription(
         key="Healthy Heart Fitness Forecast",  # The key used by the API for the sensor
+        entity_registry_enabled_default=True,
         value_fn=lambda data: cast(
             str, data[ATTR_CATEGORY]
         ),  # If we want to display value e.g. 5.8, or the category value e.g. Good
@@ -70,10 +72,11 @@ INDEX_SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
             "Fair",
             "Poor",
         ],  # The category values the sensor can obtain (found in API Index description)
-        translation_key="healthy_heart_fitness_forecast",  # Not sure what this does or if it's needed
+        translation_key="healthy_heart_fitness_forecast",
     ),
     AccuWeatherSensorDescription(
         key="Dust & Dander Forecast",
+        entity_registry_enabled_default=True,
         value_fn=lambda data: cast(str, data[ATTR_CATEGORY]),
         device_class=SensorDeviceClass.ENUM,
         options=["Extreme", "Very High", "High", "Moderate", "Low"],
@@ -81,6 +84,7 @@ INDEX_SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
     ),
     AccuWeatherSensorDescription(
         key="Arthritis Pain Forecast",
+        entity_registry_enabled_default=True,
         value_fn=lambda data: cast(str, data[ATTR_CATEGORY]),
         device_class=SensorDeviceClass.ENUM,
         options=["At Extreme Risk", "At High Risk", "At Risk", "Neutral", "Beneficial"],
@@ -88,6 +92,7 @@ INDEX_SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
     ),
     AccuWeatherSensorDescription(
         key="Asthma Forecast",
+        entity_registry_enabled_default=True,
         value_fn=lambda data: cast(str, data[ATTR_CATEGORY]),
         device_class=SensorDeviceClass.ENUM,
         options=["At Extreme Risk", "At High Risk", "At Risk", "Neutral", "Beneficial"],
@@ -423,8 +428,13 @@ async def async_setup_entry(
     forecast_daily_coordinator: AccuWeatherDailyForecastDataUpdateCoordinator = (
         entry.runtime_data.coordinator_daily_forecast
     )
+    index_group_coordinator: AccuWeatherIndexGroupDataUpdateCoordinator = (
+        entry.runtime_data.coordinator_index_group
+    )
 
-    sensors: list[AccuWeatherSensor | AccuWeatherForecastSensor] = [
+    sensors: list[
+        AccuWeatherSensor | AccuWeatherForecastSensor | AccuWeatherIndexSensor
+    ] = [
         AccuWeatherSensor(observation_coordinator, description)
         for description in SENSOR_TYPES
     ]
@@ -435,6 +445,13 @@ async def async_setup_entry(
             for day in range(MAX_FORECAST_DAYS + 1)
             for description in FORECAST_SENSOR_TYPES
             if description.key in forecast_daily_coordinator.data[day]
+        ]
+    )
+    sensors.extend(
+        [
+            AccuWeatherIndexSensor(index_group_coordinator, description)
+            for description in INDEX_SENSOR_TYPES
+            if description.key in index_group_coordinator.data[0]
         ]
     )
 
@@ -548,3 +565,52 @@ class AccuWeatherForecastSensor(
     ) -> Any:
         """Get sensor data."""
         return sensors[forecast_day][kind]
+
+
+class AccuWeatherIndexSensor(
+    CoordinatorEntity[AccuWeatherIndexGroupDataUpdateCoordinator], SensorEntity
+):
+    """Define an AccuWeather entity."""
+
+    _attr_attribution = ATTRIBUTION
+    _attr_has_entity_name = True
+    entity_description: AccuWeatherSensorDescription
+
+    def __init__(
+        self,
+        coordinator: AccuWeatherIndexGroupDataUpdateCoordinator,
+        description: AccuWeatherSensorDescription,
+    ) -> None:
+        """Initialize."""
+        super().__init__(coordinator)
+
+        self.entity_description = description
+        self._sensor_data = self._get_sensor_data(coordinator.data, description.key)
+        self._attr_unique_id = f"{coordinator.location_key}-{description.key}".lower()
+        self._attr_device_info = coordinator.device_info
+
+    @property
+    def native_value(self) -> str | int | float | None:
+        """Return the state."""
+        return self.entity_description.value_fn(self._sensor_data)
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return the state attributes."""
+        return self.entity_description.attr_fn(self._sensor_data)
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle data update."""
+        self._sensor_data = self._get_sensor_data(
+            self.coordinator.data, self.entity_description.key
+        )
+        self.async_write_ha_state()
+
+    @staticmethod
+    def _get_sensor_data(
+        sensors: list[dict[str, dict[str, Any]]],
+        kind: str,
+    ) -> Any:
+        """Get sensor data."""
+        return sensors[0][kind]
