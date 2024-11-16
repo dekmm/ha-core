@@ -98,9 +98,32 @@ INDEX_SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
         options=["At Extreme Risk", "At High Risk", "At Risk", "Neutral", "Beneficial"],
         translation_key="asthma_forecast",
     ),
+    AccuWeatherSensorDescription(
+        key="Common Cold Forecast",
+        entity_registry_enabled_default=True,
+        value_fn=lambda data: cast(str, data[ATTR_CATEGORY]),
+        device_class=SensorDeviceClass.ENUM,
+        options=["At Extreme Risk", "At High Risk", "At Risk", "Neutral", "Beneficial"],
+        translation_key="common_cold_forecast",
+    ),
+    AccuWeatherSensorDescription(
+        key="Flu Forecast",
+        entity_registry_enabled_default=True,
+        value_fn=lambda data: cast(str, data[ATTR_CATEGORY]),
+        device_class=SensorDeviceClass.ENUM,
+        options=["At Extreme Risk", "At High Risk", "At Risk", "Neutral", "Beneficial"],
+        translation_key="flu_forecast",
+    ),
+    AccuWeatherSensorDescription(
+        key="Migraine Headache Forecast",
+        entity_registry_enabled_default=True,
+        value_fn=lambda data: cast(str, data[ATTR_CATEGORY]),
+        device_class=SensorDeviceClass.ENUM,
+        options=["At Extreme Risk", "At High Risk", "At Risk", "Neutral", "Beneficial"],
+        translation_key="migraine_headache_forecast",
+    ),
 )
-
-FORECAST_SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
+FORECAST_SENSOR_TYPES:tuple[AccuWeatherSensorDescription, ...] = (
     AccuWeatherSensorDescription(
         key="AirQuality",
         value_fn=lambda data: cast(str, data[ATTR_CATEGORY]),

@@ -231,7 +231,17 @@
       },
       "arthritis_pain_forecast": {
         "name": "Arthritis Pain Forecast"
+      },
+      "common_cold_forecast": {
+        "name": "Common Cold Forecast"
+      },
+      "flu_forecast": {
+        "name": "Flu Forecast"
+      },
+      "migraine_headache_forecast": {
+        "name": "Migraine Headache Forecast"
       }
+
     }
   },
   "system_health": {
