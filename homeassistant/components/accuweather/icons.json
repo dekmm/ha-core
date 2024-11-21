@@ -45,6 +45,9 @@
       },
       "uv_index_forecast": {
         "default": "mdi:weather-sunny"
+      },
+      "healthy_heart_fitness_forecast": {
+        "default": "mdi:heart-pulse"
       }
     }
   }
