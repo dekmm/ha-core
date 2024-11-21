@@ -48,6 +48,9 @@
       },
       "healthy_heart_fitness_forecast": {
         "default": "mdi:heart-pulse"
+      },
+      "dust_and_dander_forecast": {
+        "default": "mdi:air-filter"
       }
     }
   }
