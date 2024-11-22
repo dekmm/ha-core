@@ -54,6 +54,18 @@
       },
       "arthritis_pain_forecast": {
         "default": "mdi:human-walker"
+      },
+      "asthma_forecast": {
+        "default": "mdi:lungs"
+      },
+      "common_cold_forecast": {
+        "default": "mdi:snowflake-thermometer"
+      },
+      "flu_forecast": {
+        "default": "mdi:emoticon-sick"
+      },
+      "migraine_headache_forecast": {
+        "default": "mdi:head-flash"
       }
     }
   }
