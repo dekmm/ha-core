@@ -51,6 +51,9 @@
       },
       "dust_and_dander_forecast": {
         "default": "mdi:air-filter"
+      },
+      "arthritis_pain_forecast": {
+        "default": "mdi:human-walker"
       }
     }
   }
