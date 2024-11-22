@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING, Any
 from accuweather import ApiError, InvalidApiKeyError, RequestsExceededError
 from aiohttp.client_exceptions import ClientConnectorError
 
+from homeassistant.components.persistent_notification importasync_create as create_persistent_notification
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.update_coordinator import (
@@ -22,6 +23,62 @@ from .const import DOMAIN, MANUFACTURER
 EXCEPTIONS = (ApiError, ClientConnectorError, InvalidApiKeyError, RequestsExceededError)
 
 _LOGGER = logging.getLogger(__name__)
+
+#  Define the thresholds for health conditions (e.g., arthritis, asthma, etc.)
+HEALTH_CONDITION_THRESHOLDS = {
+    "arthritis_pain_forecast": ["At Extreme Risk", "At High Risk", "At Risk"],
+    "asthma_forecast": ["At Extreme Risk", "At Hight Risk ", "At Risk"],
+    "sinus_pressure_forecast": ["At Extreme Risk", "At High Risk"],
+    "common_cold_forecast": ["At Extreme Risk", "At High Risk", "At Risk"],
+    "flu_forecast": ["At Extreme Risk", "At High Risk", "At Risk"],
+    "migraine_headache_forecast": ["At Extreme Risk", "At High Risk", "At Risk"],
+}
+
+
+#  Notification function to send messages to Home Assistant UI
+async def send_health_notification(
+    hass: HomeAssistant | None, condition: str, value: str
+):
+    """Send a notification if a health condition is critical."""
+    message = f"Health Alert: The condition {condition} is currently {value}. Please take necessary precautions."
+    _LOGGER.debug("Attempting to create notification: %s", message)
+    await create_persistent_notification(
+        hass,
+        message=message,
+        title="Health Risk Alert",
+        notification_id=f"{condition}_alert",
+    )
+    _LOGGER.debug("Notification created successfully.")
+
+    await create_persistent_notification(
+        hass,
+        message="Test Notification",
+        title="Test",
+        notification_id="test_notification",
+    )
+
+
+#  Function to check if any health condition reaches the critical threshold and notify
+async def check_and_notify_health_conditions(hass: HomeAssistant, sensor_data: dict):
+    _LOGGER.debug("Sensor data: %s", sensor_data)
+    """Check sensor values and notify if they exceed critical thresholds."""
+    for condition, value in sensor_data.items():
+        _LOGGER.debug("Checking condition: %s with value: %s", condition, value)
+        # Check if the condition exists in the thresholds and if it meets the critical levels
+        if value in HEALTH_CONDITION_THRESHOLDS.get(condition, []):
+            _LOGGER.debug(
+                "Health condition: %s with value: %s exceeds the threshold",
+                condition,
+                value,
+            )
+            # Send notification if the condition is at risk
+            await send_health_notification(hass, condition, value)
+        else:
+            _LOGGER.debug(
+                "Health condition: %s with value: %s is within safe limits",
+                condition,
+                value,
+            )
 
 
 class AccuWeatherObservationDataUpdateCoordinator(
