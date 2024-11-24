@@ -42,6 +42,7 @@ from .const import (
 )
 from .coordinator import (
     AccuWeatherDailyForecastDataUpdateCoordinator,
+    AccuWeatherHistoricalDataUpdateCoordinator,
     AccuWeatherIndexGroupDataUpdateCoordinator,
     AccuWeatherObservationDataUpdateCoordinator,
 )
@@ -123,7 +124,7 @@ INDEX_SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
         translation_key="migraine_headache_forecast",
     ),
 )
-FORECAST_SENSOR_TYPES:tuple[AccuWeatherSensorDescription, ...] = (
+FORECAST_SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
     AccuWeatherSensorDescription(
         key="AirQuality",
         value_fn=lambda data: cast(str, data[ATTR_CATEGORY]),
@@ -438,6 +439,57 @@ SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
     ),
 )
 
+HISTORICAL_SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
+    AccuWeatherSensorDescription(
+        key="Dust & Dander Forecast",
+        entity_registry_enabled_default=True,
+        value_fn=lambda data: cast(str, data[ATTR_CATEGORY]),
+        device_class=SensorDeviceClass.ENUM,
+        options=["Extreme", "Very High", "High", "Moderate", "Low"],
+        translation_key="dust_and_dander_historical",
+    ),
+    AccuWeatherSensorDescription(
+        key="Arthritis Pain Forecast",
+        entity_registry_enabled_default=True,
+        value_fn=lambda data: cast(str, data[ATTR_CATEGORY]),
+        device_class=SensorDeviceClass.ENUM,
+        options=["At Extreme Risk", "At High Risk", "At Risk", "Neutral", "Beneficial"],
+        translation_key="arthritis_pain_historical",
+    ),
+    AccuWeatherSensorDescription(
+        key="Asthma Forecast",
+        entity_registry_enabled_default=True,
+        value_fn=lambda data: cast(str, data[ATTR_CATEGORY]),
+        device_class=SensorDeviceClass.ENUM,
+        options=["At Extreme Risk", "At High Risk", "At Risk", "Neutral", "Beneficial"],
+        translation_key="asthma_historical",
+    ),
+    AccuWeatherSensorDescription(
+        key="Common Cold Forecast",
+        entity_registry_enabled_default=True,
+        value_fn=lambda data: cast(str, data[ATTR_CATEGORY]),
+        device_class=SensorDeviceClass.ENUM,
+        options=["At Extreme Risk", "At High Risk", "At Risk", "Neutral", "Beneficial"],
+        translation_key="common_cold_historical",
+    ),
+    AccuWeatherSensorDescription(
+        key="Flu Forecast",
+        entity_registry_enabled_default=True,
+        value_fn=lambda data: cast(str, data[ATTR_CATEGORY]),
+        device_class=SensorDeviceClass.ENUM,
+        options=["At Extreme Risk", "At High Risk", "At Risk", "Neutral", "Beneficial"],
+        translation_key="flu_historical",
+    ),
+    AccuWeatherSensorDescription(
+        key="Migraine Headache Forecast",
+        entity_registry_enabled_default=True,
+        value_fn=lambda data: cast(str, data[ATTR_CATEGORY]),
+        device_class=SensorDeviceClass.ENUM,
+        options=["At Extreme Risk", "At High Risk", "At Risk", "Neutral", "Beneficial"],
+        translation_key="migraine_headache_historical",
+    ),
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -454,14 +506,19 @@ async def async_setup_entry(
     index_group_coordinator: AccuWeatherIndexGroupDataUpdateCoordinator = (
         entry.runtime_data.coordinator_index_group
     )
+    historical_coordinator = entry.runtime_data.coordinator_historical
 
     sensors: list[
-        AccuWeatherSensor | AccuWeatherForecastSensor | AccuWeatherIndexSensor
+        AccuWeatherSensor
+        | AccuWeatherForecastSensor
+        | AccuWeatherIndexSensor
+        | AccuWeatherHistoricalSensor
     ] = [
         AccuWeatherSensor(observation_coordinator, description)
         for description in SENSOR_TYPES
     ]
 
+    # Add forecast sensors
     sensors.extend(
         [
             AccuWeatherForecastSensor(forecast_daily_coordinator, description, day)
@@ -470,11 +527,23 @@ async def async_setup_entry(
             if description.key in forecast_daily_coordinator.data[day]
         ]
     )
+
+    # Add index group sensors
     sensors.extend(
         [
             AccuWeatherIndexSensor(index_group_coordinator, description)
             for description in INDEX_SENSOR_TYPES
             if description.key in index_group_coordinator.data[0]
+        ]
+    )
+
+    # Add historical sensors
+    sensors.extend(
+        [
+            AccuWeatherHistoricalSensor(historical_coordinator, description, day)
+            for day in range(5)
+            for description in HISTORICAL_SENSOR_TYPES
+            if description.key in historical_coordinator.data[day]
         ]
     )
 
@@ -637,3 +706,60 @@ class AccuWeatherIndexSensor(
     ) -> Any:
         """Get sensor data."""
         return sensors[0][kind]
+
+
+class AccuWeatherHistoricalSensor(
+    CoordinatorEntity[AccuWeatherHistoricalDataUpdateCoordinator], SensorEntity
+):
+    """Define an AccuWeather entity for historical data."""
+
+    _attr_attribution = ATTRIBUTION
+    _attr_has_entity_name = True
+    entity_description: AccuWeatherSensorDescription
+
+    def __init__(
+        self,
+        coordinator: AccuWeatherHistoricalDataUpdateCoordinator,
+        description: AccuWeatherSensorDescription,
+        day: int,
+    ) -> None:
+        """Initialize."""
+        super().__init__(coordinator)
+
+        self.entity_description = description
+        self.day = day
+        self._sensor_data = self._get_sensor_data(
+            coordinator.data, description.key, day
+        )
+        self._attr_unique_id = (
+            f"{coordinator.location_key}-{description.key}-day-{day}".lower()
+        )
+        self._attr_device_info = coordinator.device_info
+        self._attr_translation_placeholders = {"day": f"Day {day + 1}"}
+
+    @property
+    def native_value(self) -> str | int | float | None:
+        """Return the state."""
+        return self.entity_description.value_fn(self._sensor_data)
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return the state attributes."""
+        return self.entity_description.attr_fn(self._sensor_data)
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle data update."""
+        self._sensor_data = self._get_sensor_data(
+            self.coordinator.data, self.entity_description.key, self.day
+        )
+        self.async_write_ha_state()
+
+    @staticmethod
+    def _get_sensor_data(
+        sensors: list[dict[str, Any]],
+        kind: str,
+        day: int,
+    ) -> Any:
+        """Get sensor data for a specific day."""
+        return sensors[day][kind]

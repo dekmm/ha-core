@@ -240,8 +240,25 @@
       },
       "migraine_headache_forecast": {
         "name": "Migraine Headache Forecast"
+      },
+      "dust_and_dander_historical": {
+        "name": "Dust & Dander"
+      },
+      "arthritis_pain_historical": {
+        "name": "Arthritis Pain"
+      },
+      "asthma_historical": {
+        "name": "Asthma"
+      },
+      "common_cold_historical": {
+        "name": "Common Cold"
+      },
+      "flu_historical": {
+        "name": "Flu"
+      },
+      "migraine_headache_historical": {
+        "name": "Migraine Headache"
       }
-
     }
   },
   "system_health": {

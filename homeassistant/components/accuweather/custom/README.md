@@ -9,4 +9,7 @@
 
 ```yaml
 type: 'custom:weather-index-card'
+
+
 ```
+http://localhost:8123/local/weather-graph-card.js

@@ -66,6 +66,24 @@
       },
       "migraine_headache_forecast": {
         "default": "mdi:head-flash"
+      },
+      "dust_and_dander_historical": {
+        "default": "mdi:air-filter"
+      },
+      "arthritis_pain_historical": {
+        "default": "mdi:human-walker"
+      },
+      "asthma_historical": {
+        "default": "mdi:lungs"
+      },
+      "common_cold_historical": {
+        "default": "mdi:snowflake-thermometer"
+      },
+      "flu_historical": {
+        "default": "mdi:emoticon-sick"
+      },
+      "migraine_headache_historical": {
+        "default": "mdi:head-flash"
       }
     }
   }

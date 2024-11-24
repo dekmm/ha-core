@@ -155,6 +155,56 @@ class AccuWeatherDailyForecastDataUpdateCoordinator(
         return result
 
 
+class AccuWeatherHistoricalDataUpdateCoordinator(
+    TimestampDataUpdateCoordinator[list[dict[str, Any]]]
+):
+    """Class to manage fetching AccuWeather historical data for the last five days."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        accuweather: AccuWeatherExt,
+        name: str,
+        coordinator_type: str,
+        update_interval: timedelta,
+        index_id: IndexGroup,
+    ) -> None:
+        """Initialize."""
+        self.accuweather = accuweather
+        self.location_key = accuweather.location_key
+        self.index_id = index_id
+
+        if TYPE_CHECKING:
+            assert self.location_key is not None
+
+        self.device_info = _get_device_info(self.location_key, name)
+
+        super().__init__(
+            hass,
+            _LOGGER,
+            name=f"{name} ({coordinator_type})",
+            update_interval=update_interval,
+        )
+
+    async def _async_update_data(self) -> list[dict[str, Any]]:
+        """Update historical data via library."""
+        try:
+            async with timeout(10):
+                result = await self.accuweather.async_get_five_days(self.index_id)
+            if not result:
+                raise UpdateFailed("No historical data returned from API")
+            _LOGGER.debug(
+                "Historical data fetched for index %s. Requests remaining: %d",
+                self.index_id,
+                self.accuweather.requests_remaining,
+            )
+            return result
+        except EXCEPTIONS as error:
+            raise UpdateFailed(
+                f"Failed to fetch historical data for index {self.index_id}: {error}"
+            ) from error
+
+
 def _get_device_info(location_key: str, name: str) -> DeviceInfo:
     """Get device info."""
     return DeviceInfo(

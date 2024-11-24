@@ -239,6 +239,29 @@ class AccuWeatherExt(AccuWeather):
         data = await self._async_get_list_data(url)
         return _parse_index_data(data)
 
+    async def async_get_five_days(
+        self, index_id: IndexGroup
+    ) -> list[dict[str, dict[str, Any]]]:
+        """Retrieve data for the last five days for a specific index group from AccuWeather.
+
+        Args: index_id (IndexGroup): The index group ID (e.g., HEALTH, POLLEN, etc.).
+
+        Returns: list[dict[str, dict[str, Any]]]: Parsed data grouped by date.
+        """
+        if not self._location_key:
+            await self.async_get_location()
+
+        if TYPE_CHECKING:
+            assert self._location_key is not None
+
+        url = (
+            BASE_URL
+            + f"indices/v1/daily/5day/{self._location_key}/groups/{index_id.value}?apikey={self._api_key}&details=true"
+        )
+
+        data = await self._async_get_list_data(url)
+        return _parse_index_data(data)
+
     async def _async_get_list_data(self, url: str) -> list[Any]:
         """Retrieve data from AccuWeather API."""
         async with self._session.get(url, headers={"Content-Encoding": "gzip"}) as resp:
