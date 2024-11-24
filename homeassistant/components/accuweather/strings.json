@@ -221,43 +221,43 @@
         "name": "Wind speed night {forecast_day}"
       },
       "healthy_heart_fitness_forecast": {
-        "name": "Healthy Heart Fitness Forecast"
+        "name": "Healthy Heart Fitness Forecast {forecast_day}"
       },
       "dust_and_dander_forecast": {
-        "name": "Dust & Dander Forecast"
+        "name": "Dust & Dander Forecast {forecast_day}"
       },
       "asthma_forecast": {
-        "name": "Asthma Forecast"
+        "name": "Asthma Forecast {forecast_day}"
       },
       "arthritis_pain_forecast": {
-        "name": "Arthritis Pain Forecast"
+        "name": "Arthritis Pain Forecast {forecast_day}"
       },
       "common_cold_forecast": {
-        "name": "Common Cold Forecast"
+        "name": "Common Cold Forecast {forecast_day}"
       },
       "flu_forecast": {
-        "name": "Flu Forecast"
+        "name": "Flu Forecast {forecast_day}"
       },
       "migraine_headache_forecast": {
-        "name": "Migraine Headache Forecast"
+        "name": "Migraine Headache Forecast {forecast_day}"
       },
       "dust_and_dander_historical": {
-        "name": "Dust & Dander"
-      },
-      "arthritis_pain_historical": {
-        "name": "Arthritis Pain"
+        "name": "Dust & Dander Historical"
       },
       "asthma_historical": {
-        "name": "Asthma"
+        "name": "Asthma Historical"
+      },
+      "arthritis_pain_historical": {
+        "name": "Arthritis Pain Historical"
       },
       "common_cold_historical": {
-        "name": "Common Cold"
+        "name": "Common Cold Historical"
       },
       "flu_historical": {
-        "name": "Flu"
+        "name": "Flu Historical"
       },
       "migraine_headache_historical": {
-        "name": "Migraine Headache"
+        "name": "Migraine Headache Historical"
       }
     }
   },

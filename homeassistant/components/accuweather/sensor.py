@@ -446,7 +446,7 @@ HISTORICAL_SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
         value_fn=lambda data: cast(str, data[ATTR_CATEGORY]),
         device_class=SensorDeviceClass.ENUM,
         options=["Extreme", "Very High", "High", "Moderate", "Low"],
-        translation_key="dust_and_dander_historical",
+        translation_key="dust_and_dander_forecast",
     ),
     AccuWeatherSensorDescription(
         key="Arthritis Pain Forecast",
@@ -454,7 +454,7 @@ HISTORICAL_SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
         value_fn=lambda data: cast(str, data[ATTR_CATEGORY]),
         device_class=SensorDeviceClass.ENUM,
         options=["At Extreme Risk", "At High Risk", "At Risk", "Neutral", "Beneficial"],
-        translation_key="arthritis_pain_historical",
+        translation_key="arthritis_pain_forecast",
     ),
     AccuWeatherSensorDescription(
         key="Asthma Forecast",
@@ -462,7 +462,7 @@ HISTORICAL_SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
         value_fn=lambda data: cast(str, data[ATTR_CATEGORY]),
         device_class=SensorDeviceClass.ENUM,
         options=["At Extreme Risk", "At High Risk", "At Risk", "Neutral", "Beneficial"],
-        translation_key="asthma_historical",
+        translation_key="asthma_forecast",
     ),
     AccuWeatherSensorDescription(
         key="Common Cold Forecast",
@@ -470,7 +470,7 @@ HISTORICAL_SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
         value_fn=lambda data: cast(str, data[ATTR_CATEGORY]),
         device_class=SensorDeviceClass.ENUM,
         options=["At Extreme Risk", "At High Risk", "At Risk", "Neutral", "Beneficial"],
-        translation_key="common_cold_historical",
+        translation_key="common_cold_forecast",
     ),
     AccuWeatherSensorDescription(
         key="Flu Forecast",
@@ -478,7 +478,7 @@ HISTORICAL_SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
         value_fn=lambda data: cast(str, data[ATTR_CATEGORY]),
         device_class=SensorDeviceClass.ENUM,
         options=["At Extreme Risk", "At High Risk", "At Risk", "Neutral", "Beneficial"],
-        translation_key="flu_historical",
+        translation_key="flu_forecast",
     ),
     AccuWeatherSensorDescription(
         key="Migraine Headache Forecast",
@@ -486,7 +486,7 @@ HISTORICAL_SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
         value_fn=lambda data: cast(str, data[ATTR_CATEGORY]),
         device_class=SensorDeviceClass.ENUM,
         options=["At Extreme Risk", "At High Risk", "At Risk", "Neutral", "Beneficial"],
-        translation_key="migraine_headache_historical",
+        translation_key="migraine_headache_forecast",
     ),
 )
 
@@ -689,7 +689,10 @@ class AccuWeatherIndexSensor(
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
-        return self.entity_description.attr_fn(self._sensor_data)
+        attributes = self.entity_description.attr_fn(self._sensor_data)
+        # Include forecast date as an attribute
+        attributes["forecast_date"] = self._sensor_data.get("Date", "Unknown")
+        return attributes
 
     @callback
     def _handle_coordinator_update(self) -> None:
