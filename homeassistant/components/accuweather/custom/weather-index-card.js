@@ -1,7 +1,5 @@
 import "https://cdn.jsdelivr.net/npm/chart.js";
 
-
-// Debug message to confirm script load
 console.log('Weather Index Card Loaded!');
 
 class WeatherIndexCard extends HTMLElement {
@@ -30,7 +28,6 @@ class WeatherIndexCard extends HTMLElement {
       0: "unavailable",
     };
 
-    // Sensors for today's data with corresponding icons
     const todaySensors = [
       {
         sensor: "sensor.home_arthritis_pain_forecast",
@@ -187,6 +184,7 @@ class WeatherIndexCard extends HTMLElement {
           <div class="today-icon-box">
             <ha-icon class="icon" icon="${index.icon}"></ha-icon>
             <div class="today-label">${index.value}</div>
+            <div class="today-name">${index.name}</div>
           </div>
         `,
           )
