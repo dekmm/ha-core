@@ -8,67 +8,97 @@ class WeatherIndexCard extends HTMLElement {
   }
 
   render(hass) {
-    const sensors = [
-      "sensor.home_none_1",
-      "sensor.home_none_2",
-      "sensor.home_none_3",
-      "sensor.home_none_4",
-      "sensor.home_none_5",
-    ];
-
     const enumMapping = {
-      Low: 1,
-      Moderate: 2,
-      High: 3,
-      "Very High": 4,
-      Extreme: 5,
+      "At Extreme Risk": 6,
+      "At High Risk": 5,
+      "At Risk": 4,
+      Neutral: 3,
+      Beneficial: 2,
       unavailable: 0,
     };
 
-    const indices = [
-      {
-        name: "sensor.home_none_1",
-        value: "Low",
-        numericValue: enumMapping["Low"] || 0,
-        icon: "mdi:weather-cloudy",
-      },
-      {
-        name: "sensor.home_none_2",
-        value: "Moderate",
-        numericValue: enumMapping["Moderate"] || 0,
-        icon: "mdi:weather-cloudy",
-      },
-      {
-        name: "sensor.home_none_5",
-        value: "Extreme",
-        numericValue: enumMapping["Extreme"] || 0,
-        icon: "mdi:weather-cloudy",
-      },
-      {
-        name: "sensor.home_none_3",
-        value: "High",
-        numericValue: enumMapping["High"] || 0,
-        icon: "mdi:weather-cloudy",
-      },
-      {
-        name: "sensor.home_none_4",
-        value: "Very High",
-        numericValue: enumMapping["Very High"] || 0,
-        icon: "mdi:weather-cloudy",
-      },
+    const reverseMapping = {
+      6: "At Extreme Risk",
+      5: "At High Risk",
+      4: "At Risk",
+      3: "Neutral",
+      2: "Beneficial",
+      0: "unavailable",
+    };
+
+    // Sensors for today's data with corresponding icons
+    const todaySensors = [
+      { sensor: "sensor.home_arthritis_pain_forecast", icon: "mdi:human-walker" },
+      { sensor: "sensor.home_asthma_forecast", icon: "mdi:lungs" },
+      { sensor: "sensor.home_common_cold_forecast", icon: "mdi:snowflake-thermometer" },
+      { sensor: "sensor.home_flu_forecast", icon: "mdi:emoticon-sick" },
+      { sensor: "sensor.home_migraine_headache_forecast", icon: "mdi:head-flash" },
     ];
 
-    // const indices = sensors.map(sensor => {
-    //   // const state = hass.states[sensor];
-    //   // const stateStr = state ? state.state : "unavailable";
-    //   // const icon = state ? state.attributes.icon : "mdi:weather-cloudy";
-    //   return {
-    //     name: sensor,
-    //     value: stateStr,
-    //     numericValue: enumMapping[stateStr] || 0, // Map enum to numeric
-    //     icon: icon
-    //   };
-    // });
+    const todayIndices = todaySensors.map(({ sensor, icon }) => {
+      const state = hass.states[sensor];
+      const stateStr = state ? state.state : "unavailable";
+      return {
+        name: sensor,
+        value: stateStr,
+        numericValue: enumMapping[stateStr] || 0, // Map enum to numeric
+        icon: icon || "mdi:weather-cloudy",
+      };
+    });
+
+    // Grouped sensors for 5-day forecasts
+    const groupedSensors = {
+      "Arthritis Pain Forecast": [
+        "sensor.home_arthritis_pain_forecast",
+        "sensor.home_arthritis_pain_forecast_2",
+        "sensor.home_arthritis_pain_forecast_3",
+        "sensor.home_arthritis_pain_forecast_4",
+        "sensor.home_arthritis_pain_forecast_5",
+      ],
+      "Asthma Forecast": [
+        "sensor.home_asthma_forecast",
+        "sensor.home_asthma_forecast_2",
+        "sensor.home_asthma_forecast_3",
+        "sensor.home_asthma_forecast_4",
+        "sensor.home_asthma_forecast_5",
+      ],
+      "Common Cold Forecast": [
+        "sensor.home_common_cold_forecast",
+        "sensor.home_common_cold_forecast_2",
+        "sensor.home_common_cold_forecast_3",
+        "sensor.home_common_cold_forecast_4",
+        "sensor.home_common_cold_forecast_5",
+      ],
+      "Flu Forecast": [
+        "sensor.home_flu_forecast",
+        "sensor.home_flu_forecast_2",
+        "sensor.home_flu_forecast_3",
+        "sensor.home_flu_forecast_4",
+        "sensor.home_flu_forecast_5",
+      ],
+      "Migraine Headache Forecast": [
+        "sensor.home_migraine_headache_forecast",
+        "sensor.home_migraine_headache_forecast_2",
+        "sensor.home_migraine_headache_forecast_3",
+        "sensor.home_migraine_headache_forecast_4",
+        "sensor.home_migraine_headache_forecast_5",
+      ],
+    };
+
+    const allGroups = Object.entries(groupedSensors).map(([groupName, sensors]) => {
+      const indices = sensors.map((sensor, i) => {
+        const state = hass.states[sensor];
+        const stateStr = state ? state.state : "unavailable";
+        const icon = state ? state.attributes.icon : "mdi:weather-cloudy";
+        return {
+          name: `Day ${i + 1}`,
+          value: stateStr,
+          numericValue: enumMapping[stateStr] || 0, // Map enum to numeric
+          icon: icon,
+        };
+      });
+      return { groupName, indices };
+    });
 
     this.innerHTML = `
       <style>
@@ -76,6 +106,23 @@ class WeatherIndexCard extends HTMLElement {
           display: flex;
           flex-direction: column;
           gap: 20px;
+        }
+        .today-icons {
+          display: flex;
+          justify-content: space-around;
+          margin-bottom: 20px;
+        }
+        .today-icon-box {
+          background: #1c1c1c;
+          padding: 10px;
+          text-align: center;
+          border-radius: 8px;
+          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+          flex: 1;
+          margin: 0 5px;
+        }
+        .group {
+          margin-bottom: 30px;
         }
         .boxes {
           display: grid;
@@ -93,43 +140,72 @@ class WeatherIndexCard extends HTMLElement {
           font-size: 24px;
           margin-bottom: 5px;
         }
+        .today-label {
+          font-size: 14px;
+        }
         .graph-container {
           position: relative;
           width: 100%;
           height: 150px;
         }
+        h3 {
+          margin-bottom: 10px;
+        }
       </style>
+      <div class="today-icons">
+        ${todayIndices
+          .map(
+            (index) => `
+          <div class="today-icon-box">
+            <ha-icon class="icon" icon="${index.icon}"></ha-icon>
+            <div class="today-label">${index.value}</div>
+          </div>
+        `,
+          )
+          .join("")}
+      </div>
       <div class="weather-index-card">
-        <div class="boxes">
-          ${indices
-            .map(
-              (index) => `
-            <div class="box">
-              <ha-icon class="icon" icon="${index.icon}"></ha-icon>
-              <div>${index.value}</div>
+        ${allGroups
+          .map(
+            (group) => `
+          <div class="group">
+            <h3>${group.groupName}</h3>
+            <div class="boxes">
+              ${group.indices
+                .map(
+                  (index) => `
+                <div class="box">
+                  <ha-icon class="icon" icon="${index.icon}"></ha-icon>
+                  <div>${index.name}: ${index.value}</div>
+                </div>
+              `,
+                )
+                .join("")}
             </div>
-          `,
-            )
-            .join("")}
-        </div>
-        <div class="graph-container">
-          <canvas id="weather-graph"></canvas>
-        </div>
+            <div class="graph-container">
+              <canvas id="graph-${group.groupName.replace(/\s+/g, "-")}"></canvas>
+            </div>
+          </div>
+        `,
+          )
+          .join("")}
       </div>
     `;
 
-    let rd = setInterval(() => {
-      if (this.querySelector("#weather-graph")) {
-        clearInterval(rd);
-        this.renderGraph(indices);
-      }
+    // Render graphs for each group
+    setTimeout(() => {
+      allGroups.forEach((group) => {
+        const ctx = this.querySelector(
+          `#graph-${group.groupName.replace(/\s+/g, "-")}`,
+        );
+        this.renderGraph(ctx, group.indices, reverseMapping);
+      });
     }, 1000);
   }
 
-  renderGraph(indices) {
-    const ctx = this.querySelector("#weather-graph");
+  renderGraph(ctx, indices, reverseMapping) {
     const data = indices.map((index) => index.numericValue);
-    const labels = indices.map((_, i) => `Day ${i + 1}`);
+    const labels = indices.map((index) => index.name);
 
     new Chart(ctx, {
       type: "line",
@@ -137,7 +213,7 @@ class WeatherIndexCard extends HTMLElement {
         labels: labels,
         datasets: [
           {
-            label: "Index Value",
+            label: "Severity Level",
             data: data,
             borderColor: "rgba(75, 192, 192, 1)",
             backgroundColor: "rgba(75, 192, 192, 0.2)",
@@ -156,23 +232,15 @@ class WeatherIndexCard extends HTMLElement {
             },
           },
           y: {
-            min: 1,
-            max: 5,
+            min: 0,
+            max: 6,
             title: {
               display: true,
-              text: "Index Value",
+              text: "Severity Level",
             },
             ticks: {
               callback: function (value) {
-                const reverseMapping = {
-                  1: "Low",
-                  2: "Moderate",
-                  3: "High",
-                  4: "Very High",
-                  5: "Extreme",
-                  0: "unavailable",
-                };
-                return reverseMapping[value];
+                return reverseMapping[value] || "unknown";
               },
             },
           },
