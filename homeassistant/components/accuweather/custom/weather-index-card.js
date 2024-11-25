@@ -28,251 +28,106 @@ class WeatherIndexCard extends HTMLElement {
       0: "unavailable",
     };
 
-    const todaySensors = [
-      {
-        sensor: "sensor.home_arthritis_pain_forecast",
-        icon: "mdi:human-walker",
-        name: "Arthritis Pain Forecast",
-        color: "#FF5733" // Red-Orange
-      },
-      {
-        sensor: "sensor.home_asthma_forecast",
-        icon: "mdi:lungs",
-        name: "Asthma Forecast",
-        color: "#33A1FF" // Blue
-      },
-      {
-        sensor: "sensor.home_common_cold_forecast",
-        icon: "mdi:snowflake-thermometer",
-        name: "Common Cold Forecast",
-        color: "#76FF33" // Green
-      },
-      {
-        sensor: "sensor.home_flu_forecast",
-        icon: "mdi:emoticon-sick",
-        name: "Flu Forecast",
-        color: "#FFC300" // Yellow
-      },
-      {
-        sensor: "sensor.home_migraine_headache_forecast",
-        icon: "mdi:head-flash",
-        name: "Migraine Headache Forecast",
-        color: "#C70039" // Deep Red
-      },
-    ];
-    const todayIndices = todaySensors.map(({ sensor, icon }) => {
-      const state = hass.states[sensor];
-      const stateStr = state ? state.state : "unavailable";
-      return {
-        name: sensor,
-        value: stateStr,
-        numericValue: enumMapping[stateStr] || 0, // Map enum to numeric
-        icon: icon || "mdi:weather-cloudy",
-      };
-    });
-
-    // Grouped sensors for 5-day forecasts
-    const groupedSensors = {
-      "Arthritis Pain Forecast": [
-        "sensor.home_arthritis_pain_forecast",
-        "sensor.home_arthritis_pain_forecast_2",
-        "sensor.home_arthritis_pain_forecast_3",
-        "sensor.home_arthritis_pain_forecast_4",
-        "sensor.home_arthritis_pain_forecast_5",
-      ],
-      "Asthma Forecast": [
-        "sensor.home_asthma_forecast",
-        "sensor.home_asthma_forecast_2",
-        "sensor.home_asthma_forecast_3",
-        "sensor.home_asthma_forecast_4",
-        "sensor.home_asthma_forecast_5",
-      ],
-      "Common Cold Forecast": [
-        "sensor.home_common_cold_forecast",
-        "sensor.home_common_cold_forecast_2",
-        "sensor.home_common_cold_forecast_3",
-        "sensor.home_common_cold_forecast_4",
-        "sensor.home_common_cold_forecast_5",
-      ],
-      "Flu Forecast": [
-        "sensor.home_flu_forecast",
-        "sensor.home_flu_forecast_2",
-        "sensor.home_flu_forecast_3",
-        "sensor.home_flu_forecast_4",
-        "sensor.home_flu_forecast_5",
-      ],
-      "Migraine Headache Forecast": [
-        "sensor.home_migraine_headache_forecast",
-        "sensor.home_migraine_headache_forecast_2",
-        "sensor.home_migraine_headache_forecast_3",
-        "sensor.home_migraine_headache_forecast_4",
-        "sensor.home_migraine_headache_forecast_5",
-      ],
+    const getColorBySeverity = (severity) => {
+      switch (severity) {
+        case 6:
+          return "linear-gradient(135deg, rgba(255, 0, 0, 0.9), rgba(255, 87, 51, 0.8))";
+        case 5:
+          return "linear-gradient(135deg, rgba(255, 87, 51, 0.9), rgba(255, 165, 0, 0.8))";
+        case 4:
+          return "linear-gradient(135deg, rgba(255, 165, 0, 0.9), rgba(255, 255, 0, 0.8))";
+        case 3:
+          return "linear-gradient(135deg, rgba(255, 255, 0, 0.9), rgba(0, 128, 0, 0.8))";
+        case 2:
+          return "linear-gradient(135deg, rgba(0, 128, 0, 0.9), rgba(0, 255, 128, 0.8))";
+        default:
+          return "linear-gradient(135deg, rgba(128, 128, 128, 0.9), rgba(200, 200, 200, 0.8))";
+      }
     };
 
-    const allGroups = Object.entries(groupedSensors).map(([groupName, sensors]) => {
-      const indices = sensors.map((sensor, i) => {
-        const state = hass.states[sensor];
-        const stateStr = state ? state.state : "unavailable";
-        const icon = state ? state.attributes.icon : "mdi:weather-cloudy";
-        return {
-          name: `Day ${i + 1}`,
-          value: stateStr,
-          numericValue: enumMapping[stateStr] || 0, // Map enum to numeric
-          icon: icon,
-        };
-      });
-      return { groupName, indices };
+    const todaySensors = [
+      { sensor: "sensor.home_arthritis_pain_forecast", icon: "mdi:human-walker", name: "Arthritis Pain" },
+      { sensor: "sensor.home_asthma_forecast", icon: "mdi:lungs", name: "Asthma" },
+      { sensor: "sensor.home_common_cold_forecast", icon: "mdi:snowflake-thermometer", name: "Common Cold" },
+      { sensor: "sensor.home_flu_forecast", icon: "mdi:emoticon-sick", name: "Flu" },
+      { sensor: "sensor.home_migraine_headache_forecast", icon: "mdi:head-flash", name: "Migraine Headache" },
+    ];
+
+    const todayIndices = todaySensors.map(({ sensor, icon, name }) => {
+      const state = hass.states[sensor];
+      const stateStr = state ? state.state : "unavailable";
+      const numericValue = enumMapping[stateStr] || 0;
+      return {
+        name: name,
+        value: stateStr,
+        numericValue: numericValue,
+        icon: icon || "mdi:weather-cloudy",
+        color: getColorBySeverity(numericValue),
+      };
     });
 
     this.innerHTML = `
       <style>
         .weather-index-card {
-          display: flex;
-          flex-direction: column;
-          gap: 20px;
-        }
-        .today-icons {
-          display: flex;
-          justify-content: space-around;
+          display: grid;
+          grid-template-columns: repeat(5, 1fr); /* Force 5 cards in a single row */
+          gap: 10px; /* Space between cards */
           margin-bottom: 20px;
         }
         .today-icon-box {
-          background: #1c1c1c;
-          padding: 10px;
+          padding: 15px; /* Compact padding */
           text-align: center;
-          border-radius: 8px;
-          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-          flex: 1;
-          margin: 0 5px;
+          border-radius: 12px;
+          box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+          color: white;
+          background: var(--icon-color, rgba(0, 0, 0, 0.7));
+          transition: box-shadow 0.2s ease-in-out, transform 0.2s ease-in-out;
         }
-        .group {
-          margin-bottom: 30px;
-        }
-        .boxes {
-          display: grid;
-          grid-template-columns: repeat(5, 1fr);
-          gap: 10px;
-        }
-        .box {
-          background: #1c1c1c;
-          padding: 15px;
-          text-align: center;
-          border-radius: 8px;
-          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        .today-icon-box:hover {
+          transform: scale(1.05); /* Slight hover effect */
+          box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
         }
         .icon {
-          font-size: 24px;
-          margin-bottom: 5px;
+          margin: 0 auto;
+          font-size: 40px; /* Adjusted icon size */
+          width: 50px;
+          height: 50px;
+          background: rgba(255, 255, 255, 0.3);
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .today-name {
+          font-size: 14px; /* Compact text size */
+          font-weight: bold;
+          margin-top: 8px;
+          text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
         }
         .today-label {
-          font-size: 14px;
-        }
-        .graph-container {
-          position: relative;
-          width: 100%;
-          height: 150px;
-        }
-        h3 {
-          margin-bottom: 10px;
+          font-size: 12px; /* Smaller label size */
+          font-weight: 300;
+          margin-top: 4px;
+          text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
         }
       </style>
-      <div class="today-icons">
+      <div class="weather-index-card">
         ${todayIndices
           .map(
             (index) => `
-          <div class="today-icon-box">
-            <ha-icon class="icon" icon="${index.icon}"></ha-icon>
+          <div class="today-icon-box" style="background: ${index.color}; --icon-color: ${index.color}">
+            <div class="icon">
+              <ha-icon icon="${index.icon}"></ha-icon>
+            </div>
+            <div class="today-name">${index.name}</div>
             <div class="today-label">${index.value}</div>
-
           </div>
-        `,
-          )
-          .join("")}
-      </div>
-      <div class="weather-index-card">
-        ${allGroups
-          .map(
-            (group) => `
-          <div class="group">
-            <h3>${group.groupName}</h3>
-            <div class="boxes">
-              ${group.indices
-                .map(
-                  (index) => `
-                <div class="box">
-                  <ha-icon class="icon" icon="${index.icon}"></ha-icon>
-                  <div>${index.name}: ${index.value}</div>
-                </div>
-              `,
-                )
-                .join("")}
-            </div>
-            <div class="graph-container">
-              <canvas id="graph-${group.groupName.replace(/\s+/g, "-")}"></canvas>
-            </div>
-          </div>
-        `,
+        `
           )
           .join("")}
       </div>
     `;
-
-    // Render graphs for each group
-    setTimeout(() => {
-      allGroups.forEach((group) => {
-        const ctx = this.querySelector(
-          `#graph-${group.groupName.replace(/\s+/g, "-")}`,
-        );
-        this.renderGraph(ctx, group.indices, reverseMapping);
-      });
-    }, 1000);
-  }
-
-  renderGraph(ctx, indices, reverseMapping) {
-    const data = indices.map((index) => index.numericValue);
-    const labels = indices.map((index) => index.name);
-
-    new Chart(ctx, {
-      type: "line",
-      data: {
-        labels: labels,
-        datasets: [
-          {
-            label: "Severity Level",
-            data: data,
-            borderColor: "rgba(75, 192, 192, 1)",
-            backgroundColor: "rgba(75, 192, 192, 0.2)",
-            fill: true,
-          },
-        ],
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        scales: {
-          x: {
-            title: {
-              display: true,
-              text: "Day",
-            },
-          },
-          y: {
-            min: 0,
-            max: 6,
-            title: {
-              display: true,
-              text: "Severity Level",
-            },
-            ticks: {
-              callback: function (value) {
-                return reverseMapping[value] || "unknown";
-              },
-            },
-          },
-        },
-      },
-    });
   }
 
   setConfig(config) {
