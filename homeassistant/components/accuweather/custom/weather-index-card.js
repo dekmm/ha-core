@@ -1,5 +1,9 @@
 import "https://cdn.jsdelivr.net/npm/chart.js";
 
+
+// Debug message to confirm script load
+console.log('Weather Index Card Loaded!');
+
 class WeatherIndexCard extends HTMLElement {
   set hass(hass) {
     if (!this.content) {
