@@ -184,7 +184,7 @@ class WeatherIndexCard extends HTMLElement {
           <div class="today-icon-box">
             <ha-icon class="icon" icon="${index.icon}"></ha-icon>
             <div class="today-label">${index.value}</div>
-            <div class="today-name">${index.name}</div>
+
           </div>
         `,
           )
