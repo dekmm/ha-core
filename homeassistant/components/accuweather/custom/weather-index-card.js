@@ -1,6 +1,9 @@
-import "https://cdn.jsdelivr.net/npm/chart.js";
-
 class WeatherIndexCard extends HTMLElement {
+  constructor() {
+    super();
+    this.charts = new Map(); // To track chart instances
+  }
+
   set hass(hass) {
     if (!this.content) {
       this.render(hass);
@@ -26,27 +29,6 @@ class WeatherIndexCard extends HTMLElement {
       0: "unavailable",
     };
 
-    // Sensors for today's data with corresponding icons
-    const todaySensors = [
-      { sensor: "sensor.home_arthritis_pain_forecast", icon: "mdi:human-walker" },
-      { sensor: "sensor.home_asthma_forecast", icon: "mdi:lungs" },
-      { sensor: "sensor.home_common_cold_forecast", icon: "mdi:snowflake-thermometer" },
-      { sensor: "sensor.home_flu_forecast", icon: "mdi:emoticon-sick" },
-      { sensor: "sensor.home_migraine_headache_forecast", icon: "mdi:head-flash" },
-    ];
-
-    const todayIndices = todaySensors.map(({ sensor, icon }) => {
-      const state = hass.states[sensor];
-      const stateStr = state ? state.state : "unavailable";
-      return {
-        name: sensor,
-        value: stateStr,
-        numericValue: enumMapping[stateStr] || 0, // Map enum to numeric
-        icon: icon || "mdi:weather-cloudy",
-      };
-    });
-
-    // Grouped sensors for 5-day forecasts
     const groupedSensors = {
       "Arthritis Pain Forecast": [
         "sensor.home_arthritis_pain_forecast",
@@ -62,27 +44,7 @@ class WeatherIndexCard extends HTMLElement {
         "sensor.home_asthma_forecast_4",
         "sensor.home_asthma_forecast_5",
       ],
-      "Common Cold Forecast": [
-        "sensor.home_common_cold_forecast",
-        "sensor.home_common_cold_forecast_2",
-        "sensor.home_common_cold_forecast_3",
-        "sensor.home_common_cold_forecast_4",
-        "sensor.home_common_cold_forecast_5",
-      ],
-      "Flu Forecast": [
-        "sensor.home_flu_forecast",
-        "sensor.home_flu_forecast_2",
-        "sensor.home_flu_forecast_3",
-        "sensor.home_flu_forecast_4",
-        "sensor.home_flu_forecast_5",
-      ],
-      "Migraine Headache Forecast": [
-        "sensor.home_migraine_headache_forecast",
-        "sensor.home_migraine_headache_forecast_2",
-        "sensor.home_migraine_headache_forecast_3",
-        "sensor.home_migraine_headache_forecast_4",
-        "sensor.home_migraine_headache_forecast_5",
-      ],
+      // Add other sensor groups here
     };
 
     const allGroups = Object.entries(groupedSensors).map(([groupName, sensors]) => {
@@ -93,7 +55,7 @@ class WeatherIndexCard extends HTMLElement {
         return {
           name: `Day ${i + 1}`,
           value: stateStr,
-          numericValue: enumMapping[stateStr] || 0, // Map enum to numeric
+          numericValue: enumMapping[stateStr] || 0,
           icon: icon,
         };
       });
@@ -107,41 +69,8 @@ class WeatherIndexCard extends HTMLElement {
           flex-direction: column;
           gap: 20px;
         }
-        .today-icons {
-          display: flex;
-          justify-content: space-around;
-          margin-bottom: 20px;
-        }
-        .today-icon-box {
-          background: #1c1c1c;
-          padding: 10px;
-          text-align: center;
-          border-radius: 8px;
-          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-          flex: 1;
-          margin: 0 5px;
-        }
         .group {
           margin-bottom: 30px;
-        }
-        .boxes {
-          display: grid;
-          grid-template-columns: repeat(5, 1fr);
-          gap: 10px;
-        }
-        .box {
-          background: #1c1c1c;
-          padding: 15px;
-          text-align: center;
-          border-radius: 8px;
-          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        }
-        .icon {
-          font-size: 24px;
-          margin-bottom: 5px;
-        }
-        .today-label {
-          font-size: 14px;
         }
         .graph-container {
           position: relative;
@@ -152,36 +81,12 @@ class WeatherIndexCard extends HTMLElement {
           margin-bottom: 10px;
         }
       </style>
-      <div class="today-icons">
-        ${todayIndices
-          .map(
-            (index) => `
-          <div class="today-icon-box">
-            <ha-icon class="icon" icon="${index.icon}"></ha-icon>
-            <div class="today-label">${index.value}</div>
-          </div>
-        `,
-          )
-          .join("")}
-      </div>
       <div class="weather-index-card">
         ${allGroups
           .map(
             (group) => `
           <div class="group">
             <h3>${group.groupName}</h3>
-            <div class="boxes">
-              ${group.indices
-                .map(
-                  (index) => `
-                <div class="box">
-                  <ha-icon class="icon" icon="${index.icon}"></ha-icon>
-                  <div>${index.name}: ${index.value}</div>
-                </div>
-              `,
-                )
-                .join("")}
-            </div>
             <div class="graph-container">
               <canvas id="graph-${group.groupName.replace(/\s+/g, "-")}"></canvas>
             </div>
@@ -195,19 +100,24 @@ class WeatherIndexCard extends HTMLElement {
     // Render graphs for each group
     setTimeout(() => {
       allGroups.forEach((group) => {
-        const ctx = this.querySelector(
-          `#graph-${group.groupName.replace(/\s+/g, "-")}`,
-        );
-        this.renderGraph(ctx, group.indices, reverseMapping);
+        const canvasId = `graph-${group.groupName.replace(/\s+/g, "-")}`;
+        const ctx = this.querySelector(`#${canvasId}`);
+        this.renderGraph(ctx, group.indices, reverseMapping, canvasId);
       });
     }, 1000);
   }
 
-  renderGraph(ctx, indices, reverseMapping) {
+  renderGraph(ctx, indices, reverseMapping, canvasId) {
+    // Destroy existing chart if it exists
+    if (this.charts.has(canvasId)) {
+      this.charts.get(canvasId).destroy();
+      this.charts.delete(canvasId); // Remove from map after destruction
+    }
+
     const data = indices.map((index) => index.numericValue);
     const labels = indices.map((index) => index.name);
 
-    new Chart(ctx, {
+    const chart = new Chart(ctx, {
       type: "line",
       data: {
         labels: labels,
@@ -247,6 +157,9 @@ class WeatherIndexCard extends HTMLElement {
         },
       },
     });
+
+    // Save the chart instance to the map
+    this.charts.set(canvasId, chart);
   }
 
   setConfig(config) {
