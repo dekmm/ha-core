@@ -199,6 +199,7 @@ class WeatherIndexCard extends HTMLElement {
               borderColor: "rgba(255, 99, 132, 1)", // Red
               backgroundColor: "rgba(255, 99, 132, 0.2)", // Light red
               fill: true,
+              tension: 0.4,
             },
             {
               label: "Asthma Risk",
@@ -206,6 +207,7 @@ class WeatherIndexCard extends HTMLElement {
               borderColor: "rgba(54, 162, 235, 1)", // Blue
               backgroundColor: "rgba(54, 162, 235, 0.2)", // Light blue
               fill: true,
+              tension: 0.4,
             },
             {
               label: "Arthritis Pain",
@@ -213,6 +215,7 @@ class WeatherIndexCard extends HTMLElement {
               borderColor: "rgba(75, 192, 192, 1)", // Teal
               backgroundColor: "rgba(75, 192, 192, 0.2)", // Light teal
               fill: true,
+              tension: 0.4,
             },
             {
               label: "Common Cold",
@@ -220,6 +223,7 @@ class WeatherIndexCard extends HTMLElement {
               borderColor: "rgba(255, 206, 86, 1)", // Yellow
               backgroundColor: "rgba(255, 206, 86, 0.2)", // Light yellow
               fill: true,
+              tension: 0.4,
             },
             {
               label: "Flu",
@@ -227,10 +231,25 @@ class WeatherIndexCard extends HTMLElement {
               borderColor: "rgba(153, 102, 255, 1)", // Purple
               backgroundColor: "rgba(153, 102, 255, 0.2)", // Light purple
               fill: true,
+              tension: 0.4,
             },
           ],
         },
         options: {
+          plugins: {
+            legend: {
+              labels: {
+                usePointStyle: true,
+                pointStyle: 'circle',
+                position: 'bottom',
+                color: 'white', // Label color
+                font: {
+                  size: 14, // Font size
+                  weight: 'bold', // Font weight
+                },
+              },
+            },
+          },
           responsive: true,
           maintainAspectRatio: false,
           scales: {
@@ -242,10 +261,13 @@ class WeatherIndexCard extends HTMLElement {
             },
             y: {
               min: 0,
-              max: 6,
+              max: 5,
               title: {
                 display: true,
                 text: "Risk Level",
+              },
+              ticks: {
+                stepSize: 1,
               },
             },
           },
