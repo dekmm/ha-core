@@ -10,14 +10,34 @@ class WeatherIndexCard extends HTMLElement {
   }
 
   render(hass) {
+    const today = new Date();
+    const formattedDate = today.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" });
+
     const enumMapping = {
+      // All
       "At Extreme Risk": 5,
       "At High Risk": 4,
       "At Risk": 3,
       Neutral: 2,
       Beneficial: 1,
       unavailable: 0,
+      "Unavailable": 0,
+
+      // Healthy Heart Fitness Forecast
+      "Excellent": 1,
+      "Very Good": 2,
+      "Good": 3,
+      "Fair": 4,
+      "Poor": 5,
+
+      // Dust & Dander Forecast
+      "Extreme": 5,
+      "Very High": 4,
+      "High": 3,
+      "Moderate": 2,
+      "Low": 1,
     };
+
 
     const reverseMapping = {
       5: "At Extreme Risk",
@@ -26,6 +46,20 @@ class WeatherIndexCard extends HTMLElement {
       2: "Neutral",
       1: "Beneficial",
       0: "unavailable",
+
+      // Healthy Heart Fitness Forecast
+      1: "Excellent",
+      2: "Very Good",
+      3: "Good",
+      4: "Fair",
+      5: "Poor",
+
+      // Dust & Dander Forecast
+      5: "Extreme",
+      4: "Very High",
+      3: "High",
+      2: "Moderate",
+      1: "Low",
     };
 
     const getColorBySeverity = (severity) => {
@@ -51,6 +85,8 @@ class WeatherIndexCard extends HTMLElement {
       { sensor: "sensor.home_common_cold_forecast", icon: "mdi:snowflake-thermometer", name: "Common Cold" },
       { sensor: "sensor.home_flu_forecast", icon: "mdi:emoticon-sick", name: "Flu" },
       { sensor: "sensor.home_migraine_headache_forecast", icon: "mdi:head-flash", name: "Migraine Headache" },
+      { sensor: "sensor.home_healthy_heart_fitness_forecast", icon: "mdi:heart-pulse", name: "Healthy Heart Fitness" },
+      { sensor: "sensor.home_dust_dander_forecast", icon: "mdi:air-filter", name: "Dust & Dander" },
     ];
 
     const groupedSensors = {
@@ -89,7 +125,22 @@ class WeatherIndexCard extends HTMLElement {
         "sensor.home_migraine_headache_forecast_4",
         "sensor.home_migraine_headache_forecast_5",
       ],
+      "Healthy Heart Fitness Forecast": [
+        "sensor.home_healthy_heart_fitness_forecast",
+        "sensor.home_healthy_heart_fitness_forecast_2",
+        "sensor.home_healthy_heart_fitness_forecast_3",
+        "sensor.home_healthy_heart_fitness_forecast_4",
+        "sensor.home_healthy_heart_fitness_forecast_5",
+      ],
+      "Dust & Dander Forecast": [
+        "sensor.home_dust_and_dander_forecast",
+        "sensor.home_dust_and_dander_forecast_2",
+        "sensor.home_dust_and_dander_forecast_3",
+        "sensor.home_dust_and_dander_forecast_4",
+        "sensor.home_dust_and_dander_forecast_5",
+      ],
     };
+
 
     const todayIndices = todaySensors.map(({ sensor, icon, name }) => {
       const state = hass.states[sensor];
@@ -114,7 +165,7 @@ class WeatherIndexCard extends HTMLElement {
       return acc;
     }, {});
 
-    const labels = ["Day 1", "Day 2", "Day 3", "Day 4", "Day 5"];
+
 
     const generateDateLabels = (numDays) => {
       const today = new Date();
@@ -132,55 +183,89 @@ class WeatherIndexCard extends HTMLElement {
 
     this.innerHTML = `
       <style>
-        .weather-index-card {
-          display: grid;
-          grid-template-columns: repeat(5, 1fr); /* Force 5 cards in a single row */
-          gap: 10px; /* Space between cards */
-          margin-bottom: 20px;
-        }
-        .today-icon-box {
-          padding: 15px; /* Compact padding */
-          text-align: center;
-          border-radius: 12px;
-          box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-          color: white;
-          background: var(--icon-color, rgba(0, 0, 0, 0.7));
-          transition: box-shadow 0.2s ease-in-out, transform 0.2s ease-in-out;
-        }
-        .today-icon-box:hover {
-          transform: scale(1.05); /* Slight hover effect */
-          box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
-        }
-        .icon {
-          margin: 0 auto;
-          font-size: 40px; /* Adjusted icon size */
-          width: 50px;
-          height: 50px;
-          background: rgba(255, 255, 255, 0.3);
-          border-radius: 50%;
+        .date-card {
           display: flex;
           align-items: center;
           justify-content: center;
-          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        }
-        .today-name {
-          font-size: 14px; /* Compact text size */
+          padding: 20px;
+          margin-bottom: 20px;
+          border-radius: 15px;
+          box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+          background: linear-gradient(135deg, rgba(135, 206, 235, 0.9), rgba(255, 182, 193, 0.8));
+          font-size: 18px;
           font-weight: bold;
-          margin-top: 8px;
-          text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+          color: white;
+          text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);x
+          animation: fadeIn 1s ease-in-out;
         }
-        .today-label {
-          font-size: 12px; /* Smaller label size */
-          font-weight: 300;
-          margin-top: 4px;
-          text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+            transform: translateY(-10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
         }
+
+  .weather-index-card {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 8px; /* Reduced space between cards */
+    margin-bottom: 16px; /* Adjusted bottom margin */
+  }
+
+  .today-icon-box {
+    padding: 10px; /* Reduced padding for smaller cards */
+    text-align: center;
+    border-radius: 10px; /* Slightly smaller border radius */
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2); /* Adjusted shadow */
+    color: white;
+    background: var(--icon-color, rgba(0, 0, 0, 0.7));
+    transition: box-shadow 0.2s ease-in-out, transform 0.2s ease-in-out;
+  }
+
+  .today-icon-box:hover {
+    transform: scale(1.03); /* Slight hover effect */
+    box-shadow: 0 5px 10px rgba(0, 0, 0, 0.3); /* Slightly smaller hover shadow */
+  }
+
+  .icon {
+    margin: 0 auto;
+    font-size: 32px; /* Reduced icon size */
+    width: 40px; /* Reduced icon container width */
+    height: 40px; /* Reduced icon container height */
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+
+  .today-name {
+    font-size: 12px; /* Smaller text size for name */
+    font-weight: bold;
+    margin-top: 6px;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+  }
+
+  .today-label {
+    font-size: 10px; /* Smaller text size for label */
+    font-weight: 300;
+    margin-top: 2px;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+  }
+
         .forecast-chart {
           width: 100%;
           height: 300px;
           margin-top: 20px;
         }
       </style>
+      <div class="date-card">${formattedDate}</div>
       <div class="weather-index-card">
         ${todayIndices
           .map(
@@ -211,7 +296,7 @@ class WeatherIndexCard extends HTMLElement {
               label: "Migraine Risk",
               data: forecastData["Migraine Headache Forecast"],
               borderColor: "rgba(255, 99, 132, 1)", // Red
-              backgroundColor: "rgba(255, 99, 132, 0.2)", // Light red
+              backgroundColor: "rgba(255, 99, 132, 0.1)", // Light red
               fill: true,
               tension: 0.4,
             },
@@ -219,7 +304,7 @@ class WeatherIndexCard extends HTMLElement {
               label: "Asthma Risk",
               data: forecastData["Asthma Forecast"],
               borderColor: "rgba(54, 162, 235, 1)", // Blue
-              backgroundColor: "rgba(54, 162, 235, 0.2)", // Light blue
+              backgroundColor: "rgba(54, 162, 235, 0.1)", // Light blue
               fill: true,
               tension: 0.4,
             },
@@ -227,7 +312,7 @@ class WeatherIndexCard extends HTMLElement {
               label: "Arthritis Pain",
               data: forecastData["Arthritis Pain Forecast"],
               borderColor: "rgba(75, 192, 192, 1)", // Teal
-              backgroundColor: "rgba(75, 192, 192, 0.2)", // Light teal
+              backgroundColor: "rgba(75, 192, 192, 0.1)", // Light teal
               fill: true,
               tension: 0.4,
             },
@@ -235,7 +320,7 @@ class WeatherIndexCard extends HTMLElement {
               label: "Common Cold",
               data: forecastData["Common Cold Forecast"],
               borderColor: "rgba(255, 206, 86, 1)", // Yellow
-              backgroundColor: "rgba(255, 206, 86, 0.2)", // Light yellow
+              backgroundColor: "rgba(255, 206, 86, 0.1)", // Light yellow
               fill: true,
               tension: 0.4,
             },
@@ -243,7 +328,23 @@ class WeatherIndexCard extends HTMLElement {
               label: "Flu",
               data: forecastData["Flu Forecast"],
               borderColor: "rgba(153, 102, 255, 1)", // Purple
-              backgroundColor: "rgba(153, 102, 255, 0.2)", // Light purple
+              backgroundColor: "rgba(153, 102, 255, 0.1)", // Light purple
+              fill: true,
+              tension: 0.4,
+            },
+            {
+              label: "Healthy Heart Fitness",
+              data: forecastData["Healthy Heart Fitness Forecast"],
+              borderColor: "rgba(0, 123, 255, 1)", // Blue
+              backgroundColor: "rgba(0, 123, 255, 0.1)", // Light blue
+              fill: true,
+              tension: 0.4,
+            },
+            {
+              label: "Dust & Dander",
+              data: forecastData["Dust & Dander Forecast"],
+              borderColor: "rgba(124, 252, 0, 1)", // Green
+              backgroundColor: "rgba(124, 252, 0, 0.1)", // Light green
               fill: true,
               tension: 0.4,
             },
