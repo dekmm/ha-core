@@ -11,34 +11,34 @@ class WeatherIndexCard extends HTMLElement {
 
   render(hass) {
     const enumMapping = {
-      "At Extreme Risk": 6,
-      "At High Risk": 5,
-      "At Risk": 4,
-      Neutral: 3,
-      Beneficial: 2,
+      "At Extreme Risk": 5,
+      "At High Risk": 4,
+      "At Risk": 3,
+      Neutral: 2,
+      Beneficial: 1,
       unavailable: 0,
     };
 
     const reverseMapping = {
-      6: "At Extreme Risk",
-      5: "At High Risk",
-      4: "At Risk",
-      3: "Neutral",
-      2: "Beneficial",
+      5: "At Extreme Risk",
+      4: "At High Risk",
+      3: "At Risk",
+      2: "Neutral",
+      1: "Beneficial",
       0: "unavailable",
     };
 
     const getColorBySeverity = (severity) => {
       switch (severity) {
-        case 6:
-          return "linear-gradient(135deg, rgba(255, 0, 0, 0.9), rgba(255, 87, 51, 0.8))";
         case 5:
-          return "linear-gradient(135deg, rgba(255, 87, 51, 0.9), rgba(255, 165, 0, 0.8))";
+          return "linear-gradient(135deg, rgba(255, 0, 0, 0.9), rgba(255, 87, 51, 0.8))";
         case 4:
-          return "linear-gradient(135deg, rgba(255, 165, 0, 0.9), rgba(255, 255, 0, 0.8))";
+          return "linear-gradient(135deg, rgba(255, 87, 51, 0.9), rgba(255, 165, 0, 0.8))";
         case 3:
-          return "linear-gradient(135deg, rgba(255, 255, 0, 0.9), rgba(0, 128, 0, 0.8))";
+          return "linear-gradient(135deg, rgba(255, 165, 0, 0.9), rgba(255, 255, 0, 0.8))";
         case 2:
+          return "linear-gradient(135deg, rgba(255, 255, 0, 0.9), rgba(0, 128, 0, 0.8))";
+        case 1:
           return "linear-gradient(135deg, rgba(0, 128, 0, 0.9), rgba(0, 255, 128, 0.8))";
         default:
           return "linear-gradient(135deg, rgba(128, 128, 128, 0.9), rgba(200, 200, 200, 0.8))";
@@ -53,6 +53,44 @@ class WeatherIndexCard extends HTMLElement {
       { sensor: "sensor.home_migraine_headache_forecast", icon: "mdi:head-flash", name: "Migraine Headache" },
     ];
 
+    const groupedSensors = {
+      "Arthritis Pain Forecast": [
+        "sensor.home_arthritis_pain_forecast",
+        "sensor.home_arthritis_pain_forecast_2",
+        "sensor.home_arthritis_pain_forecast_3",
+        "sensor.home_arthritis_pain_forecast_4",
+        "sensor.home_arthritis_pain_forecast_5",
+      ],
+      "Asthma Forecast": [
+        "sensor.home_asthma_forecast",
+        "sensor.home_asthma_forecast_2",
+        "sensor.home_asthma_forecast_3",
+        "sensor.home_asthma_forecast_4",
+        "sensor.home_asthma_forecast_5",
+      ],
+      "Common Cold Forecast": [
+        "sensor.home_common_cold_forecast",
+        "sensor.home_common_cold_forecast_2",
+        "sensor.home_common_cold_forecast_3",
+        "sensor.home_common_cold_forecast_4",
+        "sensor.home_common_cold_forecast_5",
+      ],
+      "Flu Forecast": [
+        "sensor.home_flu_forecast",
+        "sensor.home_flu_forecast_2",
+        "sensor.home_flu_forecast_3",
+        "sensor.home_flu_forecast_4",
+        "sensor.home_flu_forecast_5",
+      ],
+      "Migraine Headache Forecast": [
+        "sensor.home_migraine_headache_forecast",
+        "sensor.home_migraine_headache_forecast_2",
+        "sensor.home_migraine_headache_forecast_3",
+        "sensor.home_migraine_headache_forecast_4",
+        "sensor.home_migraine_headache_forecast_5",
+      ],
+    };
+
     const todayIndices = todaySensors.map(({ sensor, icon, name }) => {
       const state = hass.states[sensor];
       const stateStr = state ? state.state : "unavailable";
@@ -65,6 +103,18 @@ class WeatherIndexCard extends HTMLElement {
         color: getColorBySeverity(numericValue),
       };
     });
+
+    // Retrieve data dynamically for the chart
+    const forecastData = Object.entries(groupedSensors).reduce((acc, [key, sensors]) => {
+      acc[key] = sensors.map((sensor) => {
+        const state = hass.states[sensor];
+        const stateStr = state ? state.state : "unavailable";
+        return enumMapping[stateStr] || 0;
+      });
+      return acc;
+    }, {});
+
+    const labels = ["Day 1", "Day 2", "Day 3", "Day 4", "Day 5"];
 
     this.innerHTML = `
       <style>
@@ -111,6 +161,11 @@ class WeatherIndexCard extends HTMLElement {
           margin-top: 4px;
           text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
         }
+        .forecast-chart {
+          width: 100%;
+          height: 300px;
+          margin-top: 20px;
+        }
       </style>
       <div class="weather-index-card">
         ${todayIndices
@@ -127,7 +182,76 @@ class WeatherIndexCard extends HTMLElement {
           )
           .join("")}
       </div>
+      <canvas id="forecastChart" class="forecast-chart"></canvas>
     `;
+
+    // Render the chart after the DOM is updated
+    setTimeout(() => {
+      const ctx = this.querySelector("#forecastChart").getContext("2d");
+      new Chart(ctx, {
+        type: "line",
+        data: {
+          labels: labels,
+          datasets: [
+            {
+              label: "Migraine Risk",
+              data: forecastData["Migraine Headache Forecast"],
+              borderColor: "rgba(255, 99, 132, 1)", // Red
+              backgroundColor: "rgba(255, 99, 132, 0.2)", // Light red
+              fill: true,
+            },
+            {
+              label: "Asthma Risk",
+              data: forecastData["Asthma Forecast"],
+              borderColor: "rgba(54, 162, 235, 1)", // Blue
+              backgroundColor: "rgba(54, 162, 235, 0.2)", // Light blue
+              fill: true,
+            },
+            {
+              label: "Arthritis Pain",
+              data: forecastData["Arthritis Pain Forecast"],
+              borderColor: "rgba(75, 192, 192, 1)", // Teal
+              backgroundColor: "rgba(75, 192, 192, 0.2)", // Light teal
+              fill: true,
+            },
+            {
+              label: "Common Cold",
+              data: forecastData["Common Cold Forecast"],
+              borderColor: "rgba(255, 206, 86, 1)", // Yellow
+              backgroundColor: "rgba(255, 206, 86, 0.2)", // Light yellow
+              fill: true,
+            },
+            {
+              label: "Flu",
+              data: forecastData["Flu Forecast"],
+              borderColor: "rgba(153, 102, 255, 1)", // Purple
+              backgroundColor: "rgba(153, 102, 255, 0.2)", // Light purple
+              fill: true,
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            x: {
+              title: {
+                display: true,
+                text: "Days",
+              },
+            },
+            y: {
+              min: 0,
+              max: 6,
+              title: {
+                display: true,
+                text: "Risk Level",
+              },
+            },
+          },
+        },
+      });
+    }, 500);
   }
 
   setConfig(config) {
