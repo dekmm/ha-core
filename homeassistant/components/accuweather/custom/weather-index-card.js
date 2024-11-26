@@ -10,6 +10,49 @@ class WeatherIndexCard extends HTMLElement {
   }
 
   render(hass) {
+
+    const COLORS = {
+      gradients: {
+        severity5: "linear-gradient(135deg, rgba(255, 0, 0, 0.9), rgba(255, 87, 51, 0.8))", // Red-Orange
+        severity4: "linear-gradient(135deg, rgba(255, 87, 51, 0.9), rgba(255, 165, 0, 0.8))", // Orange
+        severity3: "linear-gradient(135deg, rgba(255, 165, 0, 0.9), rgba(255, 255, 0, 0.8))", // Yellow
+        severity2: "linear-gradient(135deg, rgba(255, 255, 0, 0.9), rgba(0, 128, 0, 0.8))", // Yellow-Green
+        severity1: "linear-gradient(135deg, rgba(0, 128, 0, 0.9), rgba(0, 255, 128, 0.8))", // Green
+        default: "linear-gradient(135deg, rgba(128, 128, 128, 0.9), rgba(200, 200, 200, 0.8))", // Gray
+      },
+      plotColors: {
+        migraine: {
+          borderColor: "rgba(255, 99, 132, 1)", // Red
+          backgroundColor: "rgba(255, 99, 132, 0.1)", // Light Red
+        },
+        asthma: {
+          borderColor: "rgba(54, 162, 235, 1)", // Blue
+          backgroundColor: "rgba(54, 162, 235, 0.1)", // Light Blue
+        },
+        arthritis: {
+          borderColor: "rgba(75, 192, 192, 1)", // Teal
+          backgroundColor: "rgba(75, 192, 192, 0.1)", // Light Teal
+        },
+        commonCold: {
+          borderColor: "rgba(255, 206, 86, 1)", // Yellow
+          backgroundColor: "rgba(255, 206, 86, 0.1)", // Light Yellow
+        },
+        flu: {
+          borderColor: "rgba(153, 102, 255, 1)", // Purple
+          backgroundColor: "rgba(153, 102, 255, 0.1)", // Light Purple
+        },
+        healthyHeart: {
+          borderColor: "rgba(0, 123, 255, 1)", // Blue
+          backgroundColor: "rgba(0, 123, 255, 0.1)", // Light Blue
+        },
+        dustDander: {
+          borderColor: "rgba(124, 252, 0, 1)", // Green
+          backgroundColor: "rgba(124, 252, 0, 0.1)", // Light Green
+        },
+      },
+    };
+
+
     const today = new Date();
     const formattedDate = today.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" });
 
@@ -65,19 +108,33 @@ class WeatherIndexCard extends HTMLElement {
     const getColorBySeverity = (severity) => {
       switch (severity) {
         case 5:
-          return "linear-gradient(135deg, rgba(255, 0, 0, 0.9), rgba(255, 87, 51, 0.8))";
+          return COLORS.gradients.severity5;
         case 4:
-          return "linear-gradient(135deg, rgba(255, 87, 51, 0.9), rgba(255, 165, 0, 0.8))";
+          return COLORS.gradients.severity4;
         case 3:
-          return "linear-gradient(135deg, rgba(255, 165, 0, 0.9), rgba(255, 255, 0, 0.8))";
+          return COLORS.gradients.severity3;
         case 2:
-          return "linear-gradient(135deg, rgba(255, 255, 0, 0.9), rgba(0, 128, 0, 0.8))";
+          return COLORS.gradients.severity2;
         case 1:
-          return "linear-gradient(135deg, rgba(0, 128, 0, 0.9), rgba(0, 255, 128, 0.8))";
+          return COLORS.gradients.severity1;
         default:
-          return "linear-gradient(135deg, rgba(128, 128, 128, 0.9), rgba(200, 200, 200, 0.8))";
+          return COLORS.gradients.default;
       }
     };
+
+
+    const datasetColorMapping = {
+      "Migraine Risk": COLORS.plotColors.migraine,
+      "Asthma Risk": COLORS.plotColors.asthma,
+      "Arthritis Pain": COLORS.plotColors.arthritis,
+      "Common Cold": COLORS.plotColors.commonCold,
+      "Flu": COLORS.plotColors.flu,
+      "Healthy Heart Fitness": COLORS.plotColors.healthyHeart,
+      "Dust & Dander": COLORS.plotColors.dustDander,
+      default: COLORS.plotColors.default,
+    };
+
+
 
     const todaySensors = [
       { sensor: "sensor.home_arthritis_pain_forecast", icon: "mdi:human-walker", name: "Arthritis Pain" },
@@ -146,14 +203,18 @@ class WeatherIndexCard extends HTMLElement {
       const state = hass.states[sensor];
       const stateStr = state ? state.state : "unavailable";
       const numericValue = enumMapping[stateStr] || 0;
+      const borderColor = datasetColorMapping[name] || datasetColorMapping.default; // Default to gray if no match
       return {
         name: name,
         value: stateStr,
         numericValue: numericValue,
         icon: icon || "mdi:weather-cloudy",
         color: getColorBySeverity(numericValue),
+        borderColor: borderColor, // Use dataset color
       };
     });
+
+
 
     // Retrieve data dynamically for the chart
     const forecastData = Object.entries(groupedSensors).reduce((acc, [key, sensors]) => {
@@ -220,7 +281,7 @@ class WeatherIndexCard extends HTMLElement {
   .today-icon-box {
     padding: 10px; /* Reduced padding for smaller cards */
     text-align: center;
-    border-radius: 10px; /* Slightly smaller border radius */
+    border-radius: 20px; /* Slightly smaller border radius */
     box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2); /* Adjusted shadow */
     color: white;
     background: var(--icon-color, rgba(0, 0, 0, 0.7));
@@ -270,8 +331,10 @@ class WeatherIndexCard extends HTMLElement {
         ${todayIndices
           .map(
             (index) => `
-          <div class="today-icon-box" style="background: ${index.color}; --icon-color: ${index.color}">
-            <div class="icon">
+            <div class="today-icon-box"
+     style="background: ${index.color}; --icon-color: ${index.color}; border: 12px solid ${index.borderColor};">
+  <div class="icon">
+
               <ha-icon icon="${index.icon}"></ha-icon>
             </div>
             <div class="today-name">${index.name}</div>
@@ -295,56 +358,56 @@ class WeatherIndexCard extends HTMLElement {
             {
               label: "Migraine Risk",
               data: forecastData["Migraine Headache Forecast"],
-              borderColor: "rgba(255, 99, 132, 1)", // Red
-              backgroundColor: "rgba(255, 99, 132, 0.1)", // Light red
+              borderColor: COLORS.plotColors.migraine.borderColor,
+              backgroundColor: COLORS.plotColors.migraine.backgroundColor,
               fill: true,
               tension: 0.4,
             },
             {
               label: "Asthma Risk",
               data: forecastData["Asthma Forecast"],
-              borderColor: "rgba(54, 162, 235, 1)", // Blue
-              backgroundColor: "rgba(54, 162, 235, 0.1)", // Light blue
+              borderColor: COLORS.plotColors.asthma.borderColor,
+              backgroundColor: COLORS.plotColors.asthma.backgroundColor,
               fill: true,
               tension: 0.4,
             },
             {
               label: "Arthritis Pain",
               data: forecastData["Arthritis Pain Forecast"],
-              borderColor: "rgba(75, 192, 192, 1)", // Teal
-              backgroundColor: "rgba(75, 192, 192, 0.1)", // Light teal
+              borderColor: COLORS.plotColors.arthritis.borderColor,
+              backgroundColor: COLORS.plotColors.arthritis.backgroundColor,
               fill: true,
               tension: 0.4,
             },
             {
               label: "Common Cold",
               data: forecastData["Common Cold Forecast"],
-              borderColor: "rgba(255, 206, 86, 1)", // Yellow
-              backgroundColor: "rgba(255, 206, 86, 0.1)", // Light yellow
+              borderColor: COLORS.plotColors.commonCold.borderColor,
+              backgroundColor: COLORS.plotColors.commonCold.backgroundColor,
               fill: true,
               tension: 0.4,
             },
             {
               label: "Flu",
               data: forecastData["Flu Forecast"],
-              borderColor: "rgba(153, 102, 255, 1)", // Purple
-              backgroundColor: "rgba(153, 102, 255, 0.1)", // Light purple
+              borderColor: COLORS.plotColors.flu.borderColor,
+              backgroundColor: COLORS.plotColors.flu.backgroundColor,
               fill: true,
               tension: 0.4,
             },
             {
               label: "Healthy Heart Fitness",
               data: forecastData["Healthy Heart Fitness Forecast"],
-              borderColor: "rgba(0, 123, 255, 1)", // Blue
-              backgroundColor: "rgba(0, 123, 255, 0.1)", // Light blue
+              borderColor: COLORS.plotColors.healthyHeart.borderColor,
+              backgroundColor: COLORS.plotColors.healthyHeart.backgroundColor,
               fill: true,
               tension: 0.4,
             },
             {
               label: "Dust & Dander",
               data: forecastData["Dust & Dander Forecast"],
-              borderColor: "rgba(124, 252, 0, 1)", // Green
-              backgroundColor: "rgba(124, 252, 0, 0.1)", // Light green
+              borderColor: COLORS.plotColors.dustDander.borderColor,
+              backgroundColor: COLORS.plotColors.dustDander.backgroundColor,
               fill: true,
               tension: 0.4,
             },
@@ -355,12 +418,12 @@ class WeatherIndexCard extends HTMLElement {
             legend: {
               labels: {
                 usePointStyle: true,
-                pointStyle: 'circle',
-                position: 'bottom',
-                color: 'white', // Label color
+                pointStyle: "circle",
+                position: "bottom",
+                color: "white", // Label color
                 font: {
                   size: 14, // Font size
-                  weight: 'bold', // Font weight
+                  weight: "bold", // Font weight
                 },
               },
             },
@@ -376,7 +439,7 @@ class WeatherIndexCard extends HTMLElement {
             },
             y: {
               min: 0,
-              max: 5,
+              max: 6,
               title: {
                 display: true,
                 text: "Risk Level",
