@@ -116,6 +116,20 @@ class WeatherIndexCard extends HTMLElement {
 
     const labels = ["Day 1", "Day 2", "Day 3", "Day 4", "Day 5"];
 
+    const generateDateLabels = (numDays) => {
+      const today = new Date();
+      const labels = [];
+      for (let i = 0; i < numDays; i++) {
+        const date = new Date(today);
+        date.setDate(today.getDate() + i);
+        labels.push(date.toLocaleDateString("en-US", { month: "short", day: "numeric" }));
+      }
+      return labels;
+    };
+
+    const date_labels = generateDateLabels(5);
+
+
     this.innerHTML = `
       <style>
         .weather-index-card {
@@ -191,7 +205,7 @@ class WeatherIndexCard extends HTMLElement {
       new Chart(ctx, {
         type: "line",
         data: {
-          labels: labels,
+          labels: date_labels,
           datasets: [
             {
               label: "Migraine Risk",
