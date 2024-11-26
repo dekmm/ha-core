@@ -11,6 +11,14 @@ class WeatherIndexCard extends HTMLElement {
 
   render(hass) {
 
+    const locationSensor = this.config?.location_sensor || null;
+    let locationName = "Your Location";
+
+    if (locationSensor) {
+      const locationState = hass.states[locationSensor];
+      locationName = locationState ? locationState.state : "Location Unavailable";
+    }
+
     const COLORS = {
       gradients: {
         severity5: "linear-gradient(135deg, rgba(255, 0, 0, 0.9), rgba(255, 87, 51, 0.8))", // Red-Orange
@@ -73,7 +81,7 @@ class WeatherIndexCard extends HTMLElement {
       "Fair": 4,
       "Poor": 5,
 
-      // Dust & Dander Forecast
+      // Dust and Dander Forecast
       "Extreme": 5,
       "Very High": 4,
       "High": 3,
@@ -97,7 +105,7 @@ class WeatherIndexCard extends HTMLElement {
       4: "Fair",
       5: "Poor",
 
-      // Dust & Dander Forecast
+      // Dust and Dander Forecast
       5: "Extreme",
       4: "Very High",
       3: "High",
@@ -189,13 +197,13 @@ class WeatherIndexCard extends HTMLElement {
         "sensor.home_healthy_heart_fitness_forecast_4",
         "sensor.home_healthy_heart_fitness_forecast_5",
       ],
-      "Dust & Dander Forecast": [
-        "sensor.home_dust_and_dander_forecast",
-        "sensor.home_dust_and_dander_forecast_2",
-        "sensor.home_dust_and_dander_forecast_3",
-        "sensor.home_dust_and_dander_forecast_4",
-        "sensor.home_dust_and_dander_forecast_5",
-      ],
+    "Dust and Dander Forecast": [
+      "sensor.home_dust_dander_forecast",
+      "sensor.home_dust_dander_forecast_2",
+      "sensor.home_dust_dander_forecast_3",
+      "sensor.home_dust_dander_forecast_4",
+      "sensor.home_dust_dander_forecast_5",
+    ],
     };
 
 
@@ -244,8 +252,9 @@ class WeatherIndexCard extends HTMLElement {
 
     this.innerHTML = `
       <style>
-        .date-card {
+    .location-date-card {
           display: flex;
+          flex-direction: column;
           align-items: center;
           justify-content: center;
           padding: 20px;
@@ -256,8 +265,17 @@ class WeatherIndexCard extends HTMLElement {
           font-size: 18px;
           font-weight: bold;
           color: white;
-          text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);x
+          text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
           animation: fadeIn 1s ease-in-out;
+        }
+
+        .location {
+          font-size: 20px;
+          margin-bottom: 8px;
+        }
+
+        .date {
+          font-size: 16px;
         }
 
         @keyframes fadeIn {
@@ -326,7 +344,10 @@ class WeatherIndexCard extends HTMLElement {
           margin-top: 20px;
         }
       </style>
-      <div class="date-card">${formattedDate}</div>
+      <div class="location-date-card">
+        <div class="location">${locationName}</div>
+        <div class="date">${formattedDate}</div>
+      </div>
       <div class="weather-index-card">
         ${todayIndices
           .map(
@@ -405,7 +426,7 @@ class WeatherIndexCard extends HTMLElement {
             },
             {
               label: "Dust & Dander",
-              data: forecastData["Dust & Dander Forecast"],
+              data: forecastData["Dust and Dander Forecast"],
               borderColor: COLORS.plotColors.dustDander.borderColor,
               backgroundColor: COLORS.plotColors.dustDander.backgroundColor,
               fill: true,
