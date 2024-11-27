@@ -10,10 +10,8 @@ class WeatherIndexCard extends HTMLElement {
   }
 
   render(hass) {
-    const locationCityState =
-      hass.states["sensor.accuweather_home_location_city"];
-    const locationCountryState =
-      hass.states["sensor.accuweather_home_location_country"];
+    const locationCityState = hass.states["sensor.home_location_city"];
+    const locationCountryState = hass.states["sensor.home_location_country"];
 
     const locationCity = locationCityState
       ? locationCityState.state
