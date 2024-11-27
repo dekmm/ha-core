@@ -16,7 +16,7 @@ from homeassistant.helpers.update_coordinator import (
     UpdateFailed,
 )
 
-from .api import AccuWeatherExt, IndexGroup
+from .api import AccuWeatherExt, IndexGroup, IndexRange
 from .const import DOMAIN, MANUFACTURER
 
 EXCEPTIONS = (ApiError, ClientConnectorError, InvalidApiKeyError, RequestsExceededError)
@@ -79,6 +79,7 @@ class AccuWeatherIndexGroupDataUpdateCoordinator(
         coordinator_type: str,
         update_interval: timedelta,
         index_id: IndexGroup,
+        range: IndexRange = IndexRange.ONE_DAY,
     ) -> None:
         """Initialize."""
         self.accuweather = accuweather
@@ -90,6 +91,7 @@ class AccuWeatherIndexGroupDataUpdateCoordinator(
         self.device_info = _get_device_info(self.location_key, name)
 
         self.index_id = index_id
+        self.range = range
 
         super().__init__(
             hass,
@@ -103,7 +105,7 @@ class AccuWeatherIndexGroupDataUpdateCoordinator(
         try:
             async with timeout(10):
                 result = await self.accuweather.async_get_index_group_data(
-                    self.index_id
+                    self.index_id, self.range
                 )
         except EXCEPTIONS as error:
             raise UpdateFailed(error) from error
@@ -153,6 +155,56 @@ class AccuWeatherDailyForecastDataUpdateCoordinator(
         _LOGGER.debug("Requests remaining: %d", self.accuweather.requests_remaining)
 
         return result
+
+
+class AccuWeatherLocationDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
+    """Coordinator for fetching AccuWeather location details."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        accuweather: AccuWeatherExt,
+        name: str,
+        update_interval: timedelta,
+    ) -> None:
+        """Initialize the location coordinator."""
+        self.accuweather = accuweather
+        self.location_key = accuweather.location_key
+        self.city = "Unknown City"
+        self.country = "Unknown Country"
+
+        if TYPE_CHECKING:
+            assert self.location_key is not None
+
+        self.device_info = _get_device_info(self.location_key, name)
+
+        super().__init__(
+            hass,
+            _LOGGER,
+            name=f"{name} (location)",
+            update_interval=update_interval,
+        )
+
+    async def _async_update_data(self) -> dict[str, Any]:
+        """Fetch location details from AccuWeather."""
+        try:
+            async with timeout(10):
+                location_details = await self.accuweather.async_get_location_details()
+        except EXCEPTIONS as error:
+            raise UpdateFailed(error) from error
+
+        _LOGGER.debug("Fetched location details: %s", location_details)
+
+        # Extract city and country from the response
+        self.city = location_details.get("city", "Unknown City")
+        self.country = location_details.get("country", "Unknown Country")
+
+        return location_details
+
+    @property
+    def location_info(self) -> dict[str, str]:
+        """Return location information."""
+        return {"city": self.city, "country": self.country}
 
 
 def _get_device_info(location_key: str, name: str) -> DeviceInfo:

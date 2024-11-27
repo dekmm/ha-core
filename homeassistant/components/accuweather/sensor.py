@@ -39,10 +39,12 @@ from .const import (
     ATTR_VALUE,
     ATTRIBUTION,
     MAX_FORECAST_DAYS,
+    MAX_INDEX_DAYS,
 )
 from .coordinator import (
     AccuWeatherDailyForecastDataUpdateCoordinator,
     AccuWeatherIndexGroupDataUpdateCoordinator,
+    AccuWeatherLocationDataUpdateCoordinator,
     AccuWeatherObservationDataUpdateCoordinator,
 )
 
@@ -438,6 +440,21 @@ SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
     ),
 )
 
+LOCATION_SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
+    AccuWeatherSensorDescription(
+        key="city",
+        name="Location City",
+        value_fn=lambda data: cast(str, data),
+        device_class=SensorDeviceClass.ENUM,
+    ),
+    AccuWeatherSensorDescription(
+        key="country",
+        name="Location Country",
+        value_fn=lambda data: cast(str, data),
+        device_class=SensorDeviceClass.ENUM,
+    ),
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -454,13 +471,25 @@ async def async_setup_entry(
     index_group_coordinator: AccuWeatherIndexGroupDataUpdateCoordinator = (
         entry.runtime_data.coordinator_index_group
     )
+    location_coordinator: AccuWeatherLocationDataUpdateCoordinator = (
+        entry.runtime_data.coordinator_location
+    )
 
     sensors: list[
-        AccuWeatherSensor | AccuWeatherForecastSensor | AccuWeatherIndexSensor
+        AccuWeatherSensor
+        | AccuWeatherForecastSensor
+        | AccuWeatherIndexSensor
+        | AccuWeatherLocationSensor
     ] = [
         AccuWeatherSensor(observation_coordinator, description)
         for description in SENSOR_TYPES
     ]
+    sensors.extend(
+        [
+            AccuWeatherLocationSensor(location_coordinator, description)
+            for description in LOCATION_SENSOR_TYPES
+        ]
+    )
 
     sensors.extend(
         [
@@ -472,9 +501,10 @@ async def async_setup_entry(
     )
     sensors.extend(
         [
-            AccuWeatherIndexSensor(index_group_coordinator, description)
+            AccuWeatherIndexSensor(index_group_coordinator, description, day)
+            for day in range(1, MAX_INDEX_DAYS + 1)
             for description in INDEX_SENSOR_TYPES
-            if description.key in index_group_coordinator.data[0]
+            if description.key in index_group_coordinator.data[day - 1]
         ]
     )
 
@@ -523,14 +553,15 @@ class AccuWeatherSensor(
 
     @staticmethod
     def _get_sensor_data(
-        sensors: dict[str, Any],
+        sensors: dict[str, Any] | str,
         kind: str,
     ) -> Any:
         """Get sensor data."""
+        if isinstance(sensors, str):
+            return sensors
         if kind == "Precipitation":
-            return sensors["PrecipitationSummary"]["PastHour"]
-
-        return sensors[kind]
+            return sensors.get("PrecipitationSummary", {}).get("PastHour", None)
+        return sensors.get(kind, None)
 
 
 class AccuWeatherForecastSensor(
@@ -603,6 +634,64 @@ class AccuWeatherIndexSensor(
         self,
         coordinator: AccuWeatherIndexGroupDataUpdateCoordinator,
         description: AccuWeatherSensorDescription,
+        forecast_day: int,
+    ) -> None:
+        """Initialize."""
+        super().__init__(coordinator)
+
+        self.entity_description = description
+        self.forecast_day = forecast_day
+        self._sensor_data = self._get_sensor_data(
+            coordinator.data, description.key, forecast_day
+        )
+        self._attr_unique_id = (
+            f"{coordinator.location_key}-{description.key}-day-{forecast_day}".lower()
+        )
+        self._attr_device_info = coordinator.device_info
+
+    @property
+    def native_value(self) -> str | int | float | None:
+        """Return the state."""
+        return self.entity_description.value_fn(self._sensor_data)
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return the state attributes."""
+        attributes = self.entity_description.attr_fn(self._sensor_data)
+        attributes["forecast_day"] = self.forecast_day
+        return attributes
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle data update."""
+        self._sensor_data = self._get_sensor_data(
+            self.coordinator.data, self.entity_description.key, self.forecast_day
+        )
+        self.async_write_ha_state()
+
+    @staticmethod
+    def _get_sensor_data(
+        sensors: list[dict[str, dict[str, Any]]],
+        kind: str,
+        forecast_day: int,
+    ) -> Any:
+        """Get sensor data."""
+        return sensors[forecast_day - 1][kind]
+
+
+class AccuWeatherLocationSensor(
+    CoordinatorEntity[AccuWeatherLocationDataUpdateCoordinator], SensorEntity
+):
+    """Define an AccuWeather entity."""
+
+    _attr_attribution = ATTRIBUTION
+    _attr_has_entity_name = True
+    entity_description: AccuWeatherSensorDescription
+
+    def __init__(
+        self,
+        coordinator: AccuWeatherLocationDataUpdateCoordinator,
+        description: AccuWeatherSensorDescription,
     ) -> None:
         """Initialize."""
         super().__init__(coordinator)
@@ -620,7 +709,7 @@ class AccuWeatherIndexSensor(
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
-        return self.entity_description.attr_fn(self._sensor_data)
+        return self.entity_description.attr_fn(self.coordinator.data)
 
     @callback
     def _handle_coordinator_update(self) -> None:
@@ -632,8 +721,8 @@ class AccuWeatherIndexSensor(
 
     @staticmethod
     def _get_sensor_data(
-        sensors: list[dict[str, dict[str, Any]]],
+        sensors: dict[str, Any],
         kind: str,
     ) -> Any:
         """Get sensor data."""
-        return sensors[0][kind]
+        return sensors.get(kind, "Unknown")
