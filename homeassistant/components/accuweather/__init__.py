@@ -41,6 +41,7 @@ class AccuWeatherData:
     coordinator_location: AccuWeatherLocationDataUpdateCoordinator
 
 
+
 type AccuWeatherConfigEntry = ConfigEntry[AccuWeatherData]
 
 

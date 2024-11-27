@@ -125,7 +125,7 @@ INDEX_SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
         translation_key="migraine_headache_forecast",
     ),
 )
-FORECAST_SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
+FORECAST_SENSOR_TYPES:tuple[AccuWeatherSensorDescription, ...] = (
     AccuWeatherSensorDescription(
         key="AirQuality",
         value_fn=lambda data: cast(str, data[ATTR_CATEGORY]),

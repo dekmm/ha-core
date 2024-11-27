@@ -10,8 +10,10 @@ class WeatherIndexCard extends HTMLElement {
   }
 
   render(hass) {
-    const locationCityState = hass.states["sensor.home_location_city"];
-    const locationCountryState = hass.states["sensor.home_location_country"];
+    const locationCityState =
+      hass.states["sensor.home_location_city"];
+    const locationCountryState =
+      hass.states["sensor.home_location_country"];
 
     const locationCity = locationCityState
       ? locationCityState.state
@@ -267,7 +269,7 @@ class WeatherIndexCard extends HTMLElement {
         });
         return acc;
       },
-      {}
+      {},
     );
 
     const generateDateLabels = (numDays) => {
@@ -277,7 +279,7 @@ class WeatherIndexCard extends HTMLElement {
         const date = new Date(today);
         date.setDate(today.getDate() + i);
         labels.push(
-          date.toLocaleDateString("en-US", { month: "short", day: "numeric" })
+          date.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
         );
       }
       return labels;
@@ -287,32 +289,31 @@ class WeatherIndexCard extends HTMLElement {
 
     this.innerHTML = `
       <style>
-.location-date-card {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 10px; /* Reduced padding */
-  margin-bottom: 10px; /* Reduced margin */
-  border-radius: 10px; /* Adjusted border radius */
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2); /* Adjusted shadow */
-  background: linear-gradient(135deg, rgba(135, 206, 235, 0.9), rgba(255, 182, 193, 0.8));
-  font-size: 16px; /* Reduced font size */
-  font-weight: bold;
-  color: white;
-  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
-  animation: fadeIn 1s ease-in-out;
-}
+    .location-date-card {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          padding: 20px;
+          margin-bottom: 20px;
+          border-radius: 15px;
+          box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+          background: linear-gradient(135deg, rgba(135, 206, 235, 0.9), rgba(255, 182, 193, 0.8));
+          font-size: 18px;
+          font-weight: bold;
+          color: white;
+          text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+          animation: fadeIn 1s ease-in-out;
+        }
 
-.location {
-  font-size: 16px; /* Reduced font size */
-  margin-bottom: 4px; /* Reduced margin */
-}
+        .location {
+          font-size: 20px;
+          margin-bottom: 8px;
+        }
 
-.date {
-  font-size: 14px; /* Reduced font size */
-}
-
+        .date {
+          font-size: 16px;
+        }
 
         @keyframes fadeIn {
           from {
@@ -375,8 +376,8 @@ class WeatherIndexCard extends HTMLElement {
   }
 
         .forecast-chart {
-          width: 130%;
-          height: 70px;
+          width: 100%;
+          height: 300px;
           margin-top: 20px;
         }
       </style>
@@ -397,7 +398,7 @@ class WeatherIndexCard extends HTMLElement {
             <div class="today-name">${index.name}</div>
             <div class="today-label">${index.value}</div>
           </div>
-        `
+        `,
           )
           .join("")}
       </div>
@@ -413,10 +414,10 @@ class WeatherIndexCard extends HTMLElement {
           labels: date_labels,
           datasets: [
             {
-              label: "Arthritis Pain",
-              data: forecastData["Arthritis Pain Forecast"],
-              borderColor: COLORS.plotColors.arthritis.borderColor,
-              backgroundColor: COLORS.plotColors.arthritis.backgroundColor,
+              label: "Migraine Risk",
+              data: forecastData["Migraine Headache Forecast"],
+              borderColor: COLORS.plotColors.migraine.borderColor,
+              backgroundColor: COLORS.plotColors.migraine.backgroundColor,
               fill: true,
               tension: 0.4,
             },
@@ -425,6 +426,14 @@ class WeatherIndexCard extends HTMLElement {
               data: forecastData["Asthma Forecast"],
               borderColor: COLORS.plotColors.asthma.borderColor,
               backgroundColor: COLORS.plotColors.asthma.backgroundColor,
+              fill: true,
+              tension: 0.4,
+            },
+            {
+              label: "Arthritis Pain",
+              data: forecastData["Arthritis Pain Forecast"],
+              borderColor: COLORS.plotColors.arthritis.borderColor,
+              backgroundColor: COLORS.plotColors.arthritis.backgroundColor,
               fill: true,
               tension: 0.4,
             },
@@ -441,14 +450,6 @@ class WeatherIndexCard extends HTMLElement {
               data: forecastData["Flu Forecast"],
               borderColor: COLORS.plotColors.flu.borderColor,
               backgroundColor: COLORS.plotColors.flu.backgroundColor,
-              fill: true,
-              tension: 0.4,
-            },
-            {
-              label: "Migraine Risk",
-              data: forecastData["Migraine Headache Forecast"],
-              borderColor: COLORS.plotColors.migraine.borderColor,
-              backgroundColor: COLORS.plotColors.migraine.backgroundColor,
               fill: true,
               tension: 0.4,
             },
@@ -496,7 +497,7 @@ class WeatherIndexCard extends HTMLElement {
             },
             y: {
               min: 0,
-              max: 6,
+              max: 5,
               title: {
                 display: true,
                 text: "Risk Level",
