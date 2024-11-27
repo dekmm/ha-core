@@ -175,12 +175,12 @@ class WeatherIndexCard extends HTMLElement {
       {
         sensor: "sensor.home_migraine_headache_forecast",
         icon: "mdi:head-flash",
-        name: "Migraine Headache",
+        name: "Migraine Risk",
       },
       {
         sensor: "sensor.home_healthy_heart_fitness_forecast",
         icon: "mdi:heart-pulse",
-        name: "Healthy Heart Fitness",
+        name: "Healthy Heart",
       },
       {
         sensor: "sensor.home_dust_dander_forecast",
@@ -329,12 +329,12 @@ class WeatherIndexCard extends HTMLElement {
   .weather-index-card {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
-    gap: 8px;
+    gap: 12px;
     margin-bottom: 16px;
   }
 
   .today-icon-box {
-    padding: 10px;
+    padding: 20px;
     text-align: center;
     border-radius: 20px;
     box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
@@ -350,7 +350,7 @@ class WeatherIndexCard extends HTMLElement {
 
   .icon {
     margin: 0 auto;
-    font-size: 32px;
+    font-size: 38px;
     width: 40px;
     height: 40px;
     background: rgba(255, 255, 255, 0.3);
@@ -414,10 +414,10 @@ class WeatherIndexCard extends HTMLElement {
           labels: date_labels,
           datasets: [
             {
-              label: "Migraine Risk",
-              data: forecastData["Migraine Headache Forecast"],
-              borderColor: COLORS.plotColors.migraine.borderColor,
-              backgroundColor: COLORS.plotColors.migraine.backgroundColor,
+              label: "Arthritis Pain",
+              data: forecastData["Arthritis Pain Forecast"],
+              borderColor: COLORS.plotColors.arthritis.borderColor,
+              backgroundColor: COLORS.plotColors.arthritis.backgroundColor,
               fill: true,
               tension: 0.4,
             },
@@ -426,14 +426,6 @@ class WeatherIndexCard extends HTMLElement {
               data: forecastData["Asthma Forecast"],
               borderColor: COLORS.plotColors.asthma.borderColor,
               backgroundColor: COLORS.plotColors.asthma.backgroundColor,
-              fill: true,
-              tension: 0.4,
-            },
-            {
-              label: "Arthritis Pain",
-              data: forecastData["Arthritis Pain Forecast"],
-              borderColor: COLORS.plotColors.arthritis.borderColor,
-              backgroundColor: COLORS.plotColors.arthritis.backgroundColor,
               fill: true,
               tension: 0.4,
             },
@@ -454,7 +446,15 @@ class WeatherIndexCard extends HTMLElement {
               tension: 0.4,
             },
             {
-              label: "Healthy Heart Fitness",
+              label: "Migraine Risk",
+              data: forecastData["Migraine Headache Forecast"],
+              borderColor: COLORS.plotColors.migraine.borderColor,
+              backgroundColor: COLORS.plotColors.migraine.backgroundColor,
+              fill: true,
+              tension: 0.4,
+            },
+            {
+              label: "Healthy Heart",
               data: forecastData["Healthy Heart Fitness Forecast"],
               borderColor: COLORS.plotColors.healthyHeart.borderColor,
               backgroundColor: COLORS.plotColors.healthyHeart.backgroundColor,
