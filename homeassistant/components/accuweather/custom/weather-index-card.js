@@ -10,10 +10,8 @@ class WeatherIndexCard extends HTMLElement {
   }
 
   render(hass) {
-    const locationCityState =
-      hass.states["sensor.home_location_city"];
-    const locationCountryState =
-      hass.states["sensor.home_location_country"];
+    const locationCityState = hass.states["sensor.home_location_city"];
+    const locationCountryState = hass.states["sensor.home_location_country"];
 
     const locationCity = locationCityState
       ? locationCityState.state
@@ -269,7 +267,7 @@ class WeatherIndexCard extends HTMLElement {
         });
         return acc;
       },
-      {},
+      {}
     );
 
     const generateDateLabels = (numDays) => {
@@ -279,7 +277,7 @@ class WeatherIndexCard extends HTMLElement {
         const date = new Date(today);
         date.setDate(today.getDate() + i);
         labels.push(
-          date.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+          date.toLocaleDateString("en-US", { month: "short", day: "numeric" })
         );
       }
       return labels;
@@ -290,30 +288,32 @@ class WeatherIndexCard extends HTMLElement {
     this.innerHTML = `
       <style>
     .location-date-card {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-          padding: 20px;
-          margin-bottom: 20px;
-          border-radius: 15px;
-          box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-          background: linear-gradient(135deg, rgba(135, 206, 235, 0.9), rgba(255, 182, 193, 0.8));
-          font-size: 18px;
-          font-weight: bold;
-          color: white;
-          text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
-          animation: fadeIn 1s ease-in-out;
-        }
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 10px;
+      margin-bottom: 10px;
+      border-radius: 10px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+      background: linear-gradient(135deg, rgba(135, 206, 235, 0.9), rgba(255, 182, 193, 0.8));
+      font-size: 14px;
+      font-weight: bold;
+      color: white;
+      text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+      animation: fadeIn 1s ease-in-out;
+    }
 
-        .location {
-          font-size: 20px;
-          margin-bottom: 8px;
-        }
+    .location {
+      font-size: 16px;
+      margin-bottom: 4px;
+    }
 
-        .date {
-          font-size: 16px;
-        }
+    .date {
+      font-size: 12px;
+      margin-top: 2px;
+    }
+
 
         @keyframes fadeIn {
           from {
@@ -329,30 +329,30 @@ class WeatherIndexCard extends HTMLElement {
   .weather-index-card {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
-    gap: 8px; /* Reduced space between cards */
-    margin-bottom: 16px; /* Adjusted bottom margin */
+    gap: 8px;
+    margin-bottom: 16px;
   }
 
   .today-icon-box {
-    padding: 10px; /* Reduced padding for smaller cards */
+    padding: 10px;
     text-align: center;
-    border-radius: 20px; /* Slightly smaller border radius */
-    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2); /* Adjusted shadow */
+    border-radius: 20px;
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
     color: white;
     background: var(--icon-color, rgba(0, 0, 0, 0.7));
     transition: box-shadow 0.2s ease-in-out, transform 0.2s ease-in-out;
   }
 
   .today-icon-box:hover {
-    transform: scale(1.03); /* Slight hover effect */
-    box-shadow: 0 5px 10px rgba(0, 0, 0, 0.3); /* Slightly smaller hover shadow */
+    transform: scale(1.03);
+    box-shadow: 0 5px 10px rgba(0, 0, 0, 0.3);
   }
 
   .icon {
     margin: 0 auto;
-    font-size: 32px; /* Reduced icon size */
-    width: 40px; /* Reduced icon container width */
-    height: 40px; /* Reduced icon container height */
+    font-size: 32px;
+    width: 40px;
+    height: 40px;
     background: rgba(255, 255, 255, 0.3);
     border-radius: 50%;
     display: flex;
@@ -362,14 +362,14 @@ class WeatherIndexCard extends HTMLElement {
   }
 
   .today-name {
-    font-size: 12px; /* Smaller text size for name */
+    font-size: 16px;
     font-weight: bold;
     margin-top: 6px;
     text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
   }
 
   .today-label {
-    font-size: 10px; /* Smaller text size for label */
+    font-size: 14px;
     font-weight: 300;
     margin-top: 2px;
     text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
@@ -377,7 +377,7 @@ class WeatherIndexCard extends HTMLElement {
 
         .forecast-chart {
           width: 100%;
-          height: 300px;
+          height: 200px;
           margin-top: 20px;
         }
       </style>
@@ -398,7 +398,7 @@ class WeatherIndexCard extends HTMLElement {
             <div class="today-name">${index.name}</div>
             <div class="today-label">${index.value}</div>
           </div>
-        `,
+        `
           )
           .join("")}
       </div>
