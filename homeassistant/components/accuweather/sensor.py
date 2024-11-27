@@ -42,7 +42,6 @@ from .const import (
 )
 from .coordinator import (
     AccuWeatherDailyForecastDataUpdateCoordinator,
-    AccuWeatherHealthDataUpdateCoordinator,
     AccuWeatherIndexGroupDataUpdateCoordinator,
     AccuWeatherObservationDataUpdateCoordinator,
 )
@@ -124,7 +123,7 @@ INDEX_SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
         translation_key="migraine_headache_forecast",
     ),
 )
-FORECAST_SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
+FORECAST_SENSOR_TYPES:tuple[AccuWeatherSensorDescription, ...] = (
     AccuWeatherSensorDescription(
         key="AirQuality",
         value_fn=lambda data: cast(str, data[ATTR_CATEGORY]),
@@ -455,15 +454,9 @@ async def async_setup_entry(
     index_group_coordinator: AccuWeatherIndexGroupDataUpdateCoordinator = (
         entry.runtime_data.coordinator_index_group
     )
-    health_group_coordinator: AccuWeatherHealthDataUpdateCoordinator = (
-        entry.runtime_data.coordinator_health_group
-    )
 
     sensors: list[
-        AccuWeatherSensor
-        | AccuWeatherForecastSensor
-        | AccuWeatherIndexSensor
-        | AccuWeatherHealthSensor
+        AccuWeatherSensor | AccuWeatherForecastSensor | AccuWeatherIndexSensor
     ] = [
         AccuWeatherSensor(observation_coordinator, description)
         for description in SENSOR_TYPES
@@ -482,16 +475,6 @@ async def async_setup_entry(
             AccuWeatherIndexSensor(index_group_coordinator, description)
             for description in INDEX_SENSOR_TYPES
             if description.key in index_group_coordinator.data[0]
-        ]
-    )
-    sensors.extend(
-        [
-            AccuWeatherHealthSensor(
-                health_group_coordinator, description, forecast_day=day
-            )
-            for day in range(1, MAX_FORECAST_DAYS + 1)
-            for description in INDEX_SENSOR_TYPES
-            if description.key in health_group_coordinator.data[day - 1]
         ]
     )
 
@@ -654,61 +637,3 @@ class AccuWeatherIndexSensor(
     ) -> Any:
         """Get sensor data."""
         return sensors[0][kind]
-
-
-class AccuWeatherHealthSensor(
-    CoordinatorEntity[AccuWeatherHealthDataUpdateCoordinator], SensorEntity
-):
-    """Define an AccuWeather Health entity."""
-
-    _attr_attribution = ATTRIBUTION
-    _attr_has_entity_name = True
-    entity_description: AccuWeatherSensorDescription
-
-    def __init__(
-        self,
-        coordinator: AccuWeatherHealthDataUpdateCoordinator,
-        description: AccuWeatherSensorDescription,
-        forecast_day: int,
-    ) -> None:
-        """Initialize."""
-        super().__init__(coordinator)
-
-        self.entity_description = description
-        self.forecast_day = forecast_day
-        self._sensor_data = self._get_sensor_data(
-            coordinator.data, description.key, forecast_day
-        )
-        self._attr_unique_id = (
-            f"{coordinator.location_key}-{description.key}-day-{forecast_day}".lower()
-        )
-        self._attr_device_info = coordinator.device_info
-
-    @property
-    def native_value(self) -> str | int | float | None:
-        """Return the state."""
-        return self.entity_description.value_fn(self._sensor_data)
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Return the state attributes."""
-        attributes = self.entity_description.attr_fn(self._sensor_data)
-        attributes["forecast_day"] = self.forecast_day
-        return attributes
-
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle data update."""
-        self._sensor_data = self._get_sensor_data(
-            self.coordinator.data, self.entity_description.key, self.forecast_day
-        )
-        self.async_write_ha_state()
-
-    @staticmethod
-    def _get_sensor_data(
-        sensors: list[dict[str, dict[str, Any]]],
-        kind: str,
-        forecast_day: int,
-    ) -> Any:
-        """Get sensor data."""
-        return sensors[forecast_day - 1][kind]

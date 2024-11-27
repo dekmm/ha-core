@@ -1,3 +1,5 @@
+"""The AccuWeather component."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -14,13 +16,11 @@ from .api import AccuWeatherExt, IndexGroup
 from .const import (
     DOMAIN,
     UPDATE_INTERVAL_DAILY_FORECAST,
-    UPDATE_INTERVAL_HEALTH_GROUP,
     UPDATE_INTERVAL_INDEX_GROUP,
     UPDATE_INTERVAL_OBSERVATION,
 )
 from .coordinator import (
     AccuWeatherDailyForecastDataUpdateCoordinator,
-    AccuWeatherHealthDataUpdateCoordinator,
     AccuWeatherIndexGroupDataUpdateCoordinator,
     AccuWeatherObservationDataUpdateCoordinator,
 )
@@ -37,7 +37,6 @@ class AccuWeatherData:
     coordinator_observation: AccuWeatherObservationDataUpdateCoordinator
     coordinator_daily_forecast: AccuWeatherDailyForecastDataUpdateCoordinator
     coordinator_index_group: AccuWeatherIndexGroupDataUpdateCoordinator
-    coordinator_health_group: AccuWeatherHealthDataUpdateCoordinator
 
 
 type AccuWeatherConfigEntry = ConfigEntry[AccuWeatherData]
@@ -80,23 +79,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: AccuWeatherConfigEntry) 
         IndexGroup.HEALTH,
     )
 
-    coordinator_health_group = AccuWeatherHealthDataUpdateCoordinator(
-        hass,
-        accuweather,
-        name,
-        UPDATE_INTERVAL_HEALTH_GROUP,
-    )
-
     await coordinator_observation.async_config_entry_first_refresh()
     await coordinator_daily_forecast.async_config_entry_first_refresh()
     await coordinator_index_group.async_config_entry_first_refresh()
-    await coordinator_health_group.async_config_entry_first_refresh()
 
     entry.runtime_data = AccuWeatherData(
         coordinator_observation=coordinator_observation,
         coordinator_daily_forecast=coordinator_daily_forecast,
         coordinator_index_group=coordinator_index_group,
-        coordinator_health_group=coordinator_health_group,
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
