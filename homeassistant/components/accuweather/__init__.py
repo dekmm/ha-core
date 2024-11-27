@@ -1,3 +1,5 @@
+"""The AccuWeather component."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -10,20 +12,18 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .api import AccuWeatherExt, IndexGroup
+from .api import AccuWeatherExt, IndexGroup, IndexRange
 from .const import (
     DOMAIN,
     UPDATE_INTERVAL_DAILY_FORECAST,
-    UPDATE_INTERVAL_HEALTH_GROUP,
     UPDATE_INTERVAL_INDEX_GROUP,
     UPDATE_INTERVAL_OBSERVATION,
 )
 from .coordinator import (
     AccuWeatherDailyForecastDataUpdateCoordinator,
-    AccuWeatherHealthDataUpdateCoordinator,
     AccuWeatherIndexGroupDataUpdateCoordinator,
-    AccuWeatherObservationDataUpdateCoordinator,
     AccuWeatherLocationDataUpdateCoordinator,
+    AccuWeatherObservationDataUpdateCoordinator,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -38,7 +38,6 @@ class AccuWeatherData:
     coordinator_observation: AccuWeatherObservationDataUpdateCoordinator
     coordinator_daily_forecast: AccuWeatherDailyForecastDataUpdateCoordinator
     coordinator_index_group: AccuWeatherIndexGroupDataUpdateCoordinator
-    coordinator_health_group: AccuWeatherHealthDataUpdateCoordinator
     coordinator_location: AccuWeatherLocationDataUpdateCoordinator
 
 
@@ -80,14 +79,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: AccuWeatherConfigEntry) 
         "index group",
         UPDATE_INTERVAL_INDEX_GROUP,
         IndexGroup.HEALTH,
+        IndexRange.FIVE_DAYS,
     )
 
-    coordinator_health_group = AccuWeatherHealthDataUpdateCoordinator(
-        hass,
-        accuweather,
-        name,
-        UPDATE_INTERVAL_HEALTH_GROUP,
-    )
     coordinator_location = AccuWeatherLocationDataUpdateCoordinator(
         hass, accuweather, name, UPDATE_INTERVAL_INDEX_GROUP
     )
@@ -95,7 +89,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: AccuWeatherConfigEntry) 
     await coordinator_observation.async_config_entry_first_refresh()
     await coordinator_daily_forecast.async_config_entry_first_refresh()
     await coordinator_index_group.async_config_entry_first_refresh()
-    await coordinator_health_group.async_config_entry_first_refresh()
     await coordinator_location.async_config_entry_first_refresh()
 
     # Log fetched location details
@@ -109,7 +102,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: AccuWeatherConfigEntry) 
         coordinator_observation=coordinator_observation,
         coordinator_daily_forecast=coordinator_daily_forecast,
         coordinator_index_group=coordinator_index_group,
-        coordinator_health_group=coordinator_health_group,
         coordinator_location=coordinator_location,
     )
 

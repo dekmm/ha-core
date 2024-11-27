@@ -16,7 +16,7 @@ from homeassistant.helpers.update_coordinator import (
     UpdateFailed,
 )
 
-from .api import AccuWeatherExt, IndexGroup
+from .api import AccuWeatherExt, IndexGroup, IndexRange
 from .const import DOMAIN, MANUFACTURER
 
 EXCEPTIONS = (ApiError, ClientConnectorError, InvalidApiKeyError, RequestsExceededError)
@@ -58,9 +58,6 @@ class AccuWeatherObservationDataUpdateCoordinator(
         try:
             async with timeout(10):
                 result = await self.accuweather.async_get_current_conditions()
-                location_details = await self.accuweather.async_get_location_details()
-                self.city = location_details.get("city", "Unknown City")
-                self.country = location_details.get("country", "Unknown Country")
         except EXCEPTIONS as error:
             raise UpdateFailed(error) from error
 
@@ -82,6 +79,7 @@ class AccuWeatherIndexGroupDataUpdateCoordinator(
         coordinator_type: str,
         update_interval: timedelta,
         index_id: IndexGroup,
+        range: IndexRange = IndexRange.ONE_DAY,
     ) -> None:
         """Initialize."""
         self.accuweather = accuweather
@@ -93,6 +91,7 @@ class AccuWeatherIndexGroupDataUpdateCoordinator(
         self.device_info = _get_device_info(self.location_key, name)
 
         self.index_id = index_id
+        self.range = range
 
         super().__init__(
             hass,
@@ -106,7 +105,7 @@ class AccuWeatherIndexGroupDataUpdateCoordinator(
         try:
             async with timeout(10):
                 result = await self.accuweather.async_get_index_group_data(
-                    self.index_id
+                    self.index_id, self.range
                 )
         except EXCEPTIONS as error:
             raise UpdateFailed(error) from error
@@ -158,47 +157,6 @@ class AccuWeatherDailyForecastDataUpdateCoordinator(
         return result
 
 
-class AccuWeatherHealthDataUpdateCoordinator(
-    TimestampDataUpdateCoordinator[list[dict[str, dict[str, Any]]]]
-):
-    """Class to manage fetching AccuWeather health group data API."""
-
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        accuweather: AccuWeatherExt,
-        name: str,
-        update_interval: timedelta,
-    ) -> None:
-        """Initialize."""
-        self.accuweather = accuweather
-        self.location_key = accuweather.location_key
-
-        if TYPE_CHECKING:
-            assert self.location_key is not None
-
-        self.device_info = _get_device_info(self.location_key, name)
-
-        super().__init__(
-            hass,
-            _LOGGER,
-            name=f"{name} (Health Group 5-Day)",
-            update_interval=update_interval,
-        )
-
-    async def _async_update_data(self) -> list[dict[str, dict[str, Any]]]:
-        """Update data via library."""
-        try:
-            async with timeout(10):
-                result = await self.accuweather.async_get_health_data()
-        except EXCEPTIONS as error:
-            raise UpdateFailed(error) from error
-
-        _LOGGER.debug("Requests remaining: %d", self.accuweather.requests_remaining)
-
-        return result
-
-
 class AccuWeatherLocationDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Coordinator for fetching AccuWeather location details."""
 
@@ -215,14 +173,10 @@ class AccuWeatherLocationDataUpdateCoordinator(DataUpdateCoordinator[dict[str, A
         self.city = "Unknown City"
         self.country = "Unknown Country"
 
-        self.device_info = DeviceInfo(
-            entry_type=DeviceEntryType.SERVICE,
-            identifiers={(DOMAIN, self.location_key)},
-            manufacturer="AccuWeather",
-            name=f"AccuWeather {name}",
-            model="Location",
-            sw_version="1.0",
-        )
+        if TYPE_CHECKING:
+            assert self.location_key is not None
+
+        self.device_info = _get_device_info(self.location_key, name)
 
         super().__init__(
             hass,

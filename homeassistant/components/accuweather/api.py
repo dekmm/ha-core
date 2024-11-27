@@ -239,39 +239,6 @@ class AccuWeatherExt(AccuWeather):
         data = await self._async_get_list_data(url)
         return _parse_index_data(data)
 
-    async def async_get_health_data(
-        self, range: IndexRange = IndexRange.FIVE_DAYS
-    ) -> list[dict[str, dict[str, Any]]]:
-        """Retrieve health group data for 5 days from AccuWeather.
-
-        Args:range (IndexRange): The range of data to fetch (default: FIVE_DAYS).
-
-        Returns: list[dict]: Parsed health index data.
-        """
-        if not self._location_key:
-            await self.async_get_location()
-
-        if TYPE_CHECKING:
-            assert self._location_key is not None
-
-        url = (
-            BASE_URL
-            + f"indices/v1/daily/{range.value}/{self._location_key}/groups/{IndexGroup.HEALTH.value}?apikey={self._api_key}&details=true"
-        )
-
-        data = await self._async_get_list_data(url)
-        return _parse_index_data(data)
-
-    # async def async_get_location_details(self) -> dict[str, Any]:
-    #     """Fetch location details using the location key."""
-    #     if not self._location_key:
-    #         raise ValueError("Location key is not set.")
-
-    #     url = f"{BASE_URL}/locations/v1/{self._location_key}?apikey={self._api_key}"
-    #     response = await self._async_get_data(url)
-    #     a = print(response)
-    #     return a
-
     async def async_get_location_details(self) -> dict[str, Any]:
         """Fetch location details using the location key."""
         if not self._location_key:

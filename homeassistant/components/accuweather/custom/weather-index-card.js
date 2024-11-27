@@ -497,7 +497,7 @@ class WeatherIndexCard extends HTMLElement {
             },
             y: {
               min: 0,
-              max: 6,
+              max: 5,
               title: {
                 display: true,
                 text: "Risk Level",
