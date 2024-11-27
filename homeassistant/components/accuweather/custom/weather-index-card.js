@@ -485,7 +485,7 @@ class WeatherIndexCard extends HTMLElement {
             },
           },
           responsive: true,
-          maintainAspectRatio: true,
+          maintainAspectRatio: false,
           scales: {
             x: {
               title: {
