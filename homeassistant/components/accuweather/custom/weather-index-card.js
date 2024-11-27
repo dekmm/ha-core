@@ -1,6 +1,6 @@
 import "https://cdn.jsdelivr.net/npm/chart.js";
 
-console.log('Weather Index Card Loaded!');
+console.log("Weather Index Card Loaded!");
 
 class WeatherIndexCard extends HTMLElement {
   set hass(hass) {
@@ -10,26 +10,32 @@ class WeatherIndexCard extends HTMLElement {
   }
 
   render(hass) {
+    const locationCityState =
+      hass.states["sensor.accuweather_home_location_city"];
+    const locationCountryState =
+      hass.states["sensor.accuweather_home_location_country"];
 
-    const locationSensor = this.config?.location_sensor || null;
-    let locationName = "Location Unavailable";
-
-    if (locationSensor) {
-      const locationState = hass.states[locationSensor];
-      locationName = locationState
-        ? `${"sensor.accuweather_home_location_country"}, ${"sensor.accuweather_home_location_city"}`
-        : "Location Unavailable";
-    }
-
+    const locationCity = locationCityState
+      ? locationCityState.state
+      : "City Unavailable";
+    const locationCountry = locationCountryState
+      ? locationCountryState.state
+      : "Country Unavailable";
 
     const COLORS = {
       gradients: {
-        severity5: "linear-gradient(135deg, rgba(255, 0, 0, 0.9), rgba(255, 87, 51, 0.8))", // Red-Orange
-        severity4: "linear-gradient(135deg, rgba(255, 87, 51, 0.9), rgba(255, 165, 0, 0.8))", // Orange
-        severity3: "linear-gradient(135deg, rgba(255, 165, 0, 0.9), rgba(255, 255, 0, 0.8))", // Yellow
-        severity2: "linear-gradient(135deg, rgba(255, 255, 0, 0.9), rgba(0, 128, 0, 0.8))", // Yellow-Green
-        severity1: "linear-gradient(135deg, rgba(0, 128, 0, 0.9), rgba(0, 255, 128, 0.8))", // Green
-        default: "linear-gradient(135deg, rgba(128, 128, 128, 0.9), rgba(200, 200, 200, 0.8))", // Gray
+        severity5:
+          "linear-gradient(135deg, rgba(255, 0, 0, 0.9), rgba(255, 87, 51, 0.8))", // Red-Orange
+        severity4:
+          "linear-gradient(135deg, rgba(255, 87, 51, 0.9), rgba(255, 165, 0, 0.8))", // Orange
+        severity3:
+          "linear-gradient(135deg, rgba(255, 165, 0, 0.9), rgba(255, 255, 0, 0.8))", // Yellow
+        severity2:
+          "linear-gradient(135deg, rgba(255, 255, 0, 0.9), rgba(0, 128, 0, 0.8))", // Yellow-Green
+        severity1:
+          "linear-gradient(135deg, rgba(0, 128, 0, 0.9), rgba(0, 255, 128, 0.8))", // Green
+        default:
+          "linear-gradient(135deg, rgba(128, 128, 128, 0.9), rgba(200, 200, 200, 0.8))", // Gray
       },
       plotColors: {
         migraine: {
@@ -63,9 +69,13 @@ class WeatherIndexCard extends HTMLElement {
       },
     };
 
-
     const today = new Date();
-    const formattedDate = today.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" });
+    const formattedDate = today.toLocaleDateString("en-US", {
+      weekday: "long",
+      month: "long",
+      day: "numeric",
+      year: "numeric",
+    });
 
     const enumMapping = {
       // All
@@ -75,23 +85,22 @@ class WeatherIndexCard extends HTMLElement {
       Neutral: 2,
       Beneficial: 1,
       unavailable: 0,
-      "Unavailable": 0,
+      Unavailable: 0,
 
       // Healthy Heart Fitness Forecast
-      "Excellent": 1,
+      Excellent: 1,
       "Very Good": 2,
-      "Good": 3,
-      "Fair": 4,
-      "Poor": 5,
+      Good: 3,
+      Fair: 4,
+      Poor: 5,
 
       // Dust and Dander Forecast
-      "Extreme": 5,
+      Extreme: 5,
       "Very High": 4,
-      "High": 3,
-      "Moderate": 2,
-      "Low": 1,
+      High: 3,
+      Moderate: 2,
+      Low: 1,
     };
-
 
     const reverseMapping = {
       5: "At Extreme Risk",
@@ -133,28 +142,53 @@ class WeatherIndexCard extends HTMLElement {
       }
     };
 
-
     const datasetColorMapping = {
       "Migraine Risk": COLORS.plotColors.migraine,
       "Asthma Risk": COLORS.plotColors.asthma,
       "Arthritis Pain": COLORS.plotColors.arthritis,
       "Common Cold": COLORS.plotColors.commonCold,
-      "Flu": COLORS.plotColors.flu,
+      Flu: COLORS.plotColors.flu,
       "Healthy Heart Fitness": COLORS.plotColors.healthyHeart,
       "Dust & Dander": COLORS.plotColors.dustDander,
       default: COLORS.plotColors.default,
     };
 
-
-
     const todaySensors = [
-      { sensor: "sensor.home_arthritis_pain_forecast", icon: "mdi:human-walker", name: "Arthritis Pain" },
-      { sensor: "sensor.home_asthma_forecast", icon: "mdi:lungs", name: "Asthma" },
-      { sensor: "sensor.home_common_cold_forecast", icon: "mdi:snowflake-thermometer", name: "Common Cold" },
-      { sensor: "sensor.home_flu_forecast", icon: "mdi:emoticon-sick", name: "Flu" },
-      { sensor: "sensor.home_migraine_headache_forecast", icon: "mdi:head-flash", name: "Migraine Headache" },
-      { sensor: "sensor.home_healthy_heart_fitness_forecast", icon: "mdi:heart-pulse", name: "Healthy Heart Fitness" },
-      { sensor: "sensor.home_dust_dander_forecast", icon: "mdi:air-filter", name: "Dust & Dander" },
+      {
+        sensor: "sensor.home_arthritis_pain_forecast",
+        icon: "mdi:human-walker",
+        name: "Arthritis Pain",
+      },
+      {
+        sensor: "sensor.home_asthma_forecast",
+        icon: "mdi:lungs",
+        name: "Asthma",
+      },
+      {
+        sensor: "sensor.home_common_cold_forecast",
+        icon: "mdi:snowflake-thermometer",
+        name: "Common Cold",
+      },
+      {
+        sensor: "sensor.home_flu_forecast",
+        icon: "mdi:emoticon-sick",
+        name: "Flu",
+      },
+      {
+        sensor: "sensor.home_migraine_headache_forecast",
+        icon: "mdi:head-flash",
+        name: "Migraine Headache",
+      },
+      {
+        sensor: "sensor.home_healthy_heart_fitness_forecast",
+        icon: "mdi:heart-pulse",
+        name: "Healthy Heart Fitness",
+      },
+      {
+        sensor: "sensor.home_dust_dander_forecast",
+        icon: "mdi:air-filter",
+        name: "Dust & Dander",
+      },
     ];
 
     const groupedSensors = {
@@ -200,21 +234,21 @@ class WeatherIndexCard extends HTMLElement {
         "sensor.home_healthy_heart_fitness_forecast_4",
         "sensor.home_healthy_heart_fitness_forecast_5",
       ],
-    "Dust and Dander Forecast": [
-      "sensor.home_dust_dander_forecast",
-      "sensor.home_dust_dander_forecast_2",
-      "sensor.home_dust_dander_forecast_3",
-      "sensor.home_dust_dander_forecast_4",
-      "sensor.home_dust_dander_forecast_5",
-    ],
+      "Dust and Dander Forecast": [
+        "sensor.home_dust_dander_forecast",
+        "sensor.home_dust_dander_forecast_2",
+        "sensor.home_dust_dander_forecast_3",
+        "sensor.home_dust_dander_forecast_4",
+        "sensor.home_dust_dander_forecast_5",
+      ],
     };
-
 
     const todayIndices = todaySensors.map(({ sensor, icon, name }) => {
       const state = hass.states[sensor];
       const stateStr = state ? state.state : "unavailable";
       const numericValue = enumMapping[stateStr] || 0;
-      const borderColor = datasetColorMapping[name] || datasetColorMapping.default; // Default to gray if no match
+      const borderColor =
+        datasetColorMapping[name] || datasetColorMapping.default; // Default to gray if no match
       return {
         name: name,
         value: stateStr,
@@ -225,19 +259,18 @@ class WeatherIndexCard extends HTMLElement {
       };
     });
 
-
-
     // Retrieve data dynamically for the chart
-    const forecastData = Object.entries(groupedSensors).reduce((acc, [key, sensors]) => {
-      acc[key] = sensors.map((sensor) => {
-        const state = hass.states[sensor];
-        const stateStr = state ? state.state : "unavailable";
-        return enumMapping[stateStr] || 0;
-      });
-      return acc;
-    }, {});
-
-
+    const forecastData = Object.entries(groupedSensors).reduce(
+      (acc, [key, sensors]) => {
+        acc[key] = sensors.map((sensor) => {
+          const state = hass.states[sensor];
+          const stateStr = state ? state.state : "unavailable";
+          return enumMapping[stateStr] || 0;
+        });
+        return acc;
+      },
+      {},
+    );
 
     const generateDateLabels = (numDays) => {
       const today = new Date();
@@ -245,13 +278,14 @@ class WeatherIndexCard extends HTMLElement {
       for (let i = 0; i < numDays; i++) {
         const date = new Date(today);
         date.setDate(today.getDate() + i);
-        labels.push(date.toLocaleDateString("en-US", { month: "short", day: "numeric" }));
+        labels.push(
+          date.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+        );
       }
       return labels;
     };
 
     const date_labels = generateDateLabels(5);
-
 
     this.innerHTML = `
       <style>
@@ -348,7 +382,7 @@ class WeatherIndexCard extends HTMLElement {
         }
       </style>
       <div class="location-date-card">
-        <div class="location">${locationName}</div>
+        <div class="location">${locationCity}, ${locationCountry}</div>
         <div class="date">${formattedDate}</div>
       </div>
       <div class="weather-index-card">
@@ -364,7 +398,7 @@ class WeatherIndexCard extends HTMLElement {
             <div class="today-name">${index.name}</div>
             <div class="today-label">${index.value}</div>
           </div>
-        `
+        `,
           )
           .join("")}
       </div>
