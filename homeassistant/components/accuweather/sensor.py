@@ -39,6 +39,7 @@ from .const import (
     ATTR_VALUE,
     ATTRIBUTION,
     MAX_FORECAST_DAYS,
+    MAX_INDEX_DAYS,
 )
 from .coordinator import (
     AccuWeatherDailyForecastDataUpdateCoordinator,
@@ -501,7 +502,7 @@ async def async_setup_entry(
     sensors.extend(
         [
             AccuWeatherIndexSensor(index_group_coordinator, description, day)
-            for day in range(1, MAX_FORECAST_DAYS + 1)
+            for day in range(1, MAX_INDEX_DAYS + 1)
             for description in INDEX_SENSOR_TYPES
             if description.key in index_group_coordinator.data[day - 1]
         ]

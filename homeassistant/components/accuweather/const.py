@@ -33,6 +33,7 @@ ATTR_VALUE: Final = "Value"
 DOMAIN: Final = "accuweather"
 MANUFACTURER: Final = "AccuWeather, Inc."
 MAX_FORECAST_DAYS: Final = 4
+MAX_INDEX_DAYS: Final = 5
 
 CONDITION_CLASSES: Final[dict[str, list[int]]] = {
     ATTR_CONDITION_CLEAR_NIGHT: [33, 34, 37],
