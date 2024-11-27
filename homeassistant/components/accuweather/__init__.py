@@ -23,6 +23,7 @@ from .coordinator import (
     AccuWeatherHealthDataUpdateCoordinator,
     AccuWeatherIndexGroupDataUpdateCoordinator,
     AccuWeatherObservationDataUpdateCoordinator,
+    AccuWeatherLocationDataUpdateCoordinator,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -38,6 +39,7 @@ class AccuWeatherData:
     coordinator_daily_forecast: AccuWeatherDailyForecastDataUpdateCoordinator
     coordinator_index_group: AccuWeatherIndexGroupDataUpdateCoordinator
     coordinator_health_group: AccuWeatherHealthDataUpdateCoordinator
+    coordinator_location: AccuWeatherLocationDataUpdateCoordinator
 
 
 type AccuWeatherConfigEntry = ConfigEntry[AccuWeatherData]
@@ -86,17 +88,29 @@ async def async_setup_entry(hass: HomeAssistant, entry: AccuWeatherConfigEntry) 
         name,
         UPDATE_INTERVAL_HEALTH_GROUP,
     )
+    coordinator_location = AccuWeatherLocationDataUpdateCoordinator(
+        hass, accuweather, name, UPDATE_INTERVAL_INDEX_GROUP
+    )
 
     await coordinator_observation.async_config_entry_first_refresh()
     await coordinator_daily_forecast.async_config_entry_first_refresh()
     await coordinator_index_group.async_config_entry_first_refresh()
     await coordinator_health_group.async_config_entry_first_refresh()
+    await coordinator_location.async_config_entry_first_refresh()
+
+    # Log fetched location details
+    _LOGGER.info(
+        "Fetched location details: City: %s, Country: %s",
+        coordinator_location.city,
+        coordinator_location.country,
+    )
 
     entry.runtime_data = AccuWeatherData(
         coordinator_observation=coordinator_observation,
         coordinator_daily_forecast=coordinator_daily_forecast,
         coordinator_index_group=coordinator_index_group,
         coordinator_health_group=coordinator_health_group,
+        coordinator_location=coordinator_location,
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

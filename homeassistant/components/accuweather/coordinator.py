@@ -58,6 +58,9 @@ class AccuWeatherObservationDataUpdateCoordinator(
         try:
             async with timeout(10):
                 result = await self.accuweather.async_get_current_conditions()
+                location_details = await self.accuweather.async_get_location_details()
+                self.city = location_details.get("city", "Unknown City")
+                self.country = location_details.get("country", "Unknown Country")
         except EXCEPTIONS as error:
             raise UpdateFailed(error) from error
 
@@ -194,6 +197,60 @@ class AccuWeatherHealthDataUpdateCoordinator(
         _LOGGER.debug("Requests remaining: %d", self.accuweather.requests_remaining)
 
         return result
+
+
+class AccuWeatherLocationDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
+    """Coordinator for fetching AccuWeather location details."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        accuweather: AccuWeatherExt,
+        name: str,
+        update_interval: timedelta,
+    ) -> None:
+        """Initialize the location coordinator."""
+        self.accuweather = accuweather
+        self.location_key = accuweather.location_key
+        self.city = "Unknown City"
+        self.country = "Unknown Country"
+
+        self.device_info = DeviceInfo(
+            entry_type=DeviceEntryType.SERVICE,
+            identifiers={(DOMAIN, self.location_key)},
+            manufacturer="AccuWeather",
+            name=f"AccuWeather {name}",
+            model="Location",
+            sw_version="1.0",
+        )
+
+        super().__init__(
+            hass,
+            _LOGGER,
+            name=f"{name} (location)",
+            update_interval=update_interval,
+        )
+
+    async def _async_update_data(self) -> dict[str, Any]:
+        """Fetch location details from AccuWeather."""
+        try:
+            async with timeout(10):
+                location_details = await self.accuweather.async_get_location_details()
+        except EXCEPTIONS as error:
+            raise UpdateFailed(error) from error
+
+        _LOGGER.debug("Fetched location details: %s", location_details)
+
+        # Extract city and country from the response
+        self.city = location_details.get("city", "Unknown City")
+        self.country = location_details.get("country", "Unknown Country")
+
+        return location_details
+
+    @property
+    def location_info(self) -> dict[str, str]:
+        """Return location information."""
+        return {"city": self.city, "country": self.country}
 
 
 def _get_device_info(location_key: str, name: str) -> DeviceInfo:

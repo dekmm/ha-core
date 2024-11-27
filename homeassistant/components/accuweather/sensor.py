@@ -439,6 +439,21 @@ SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
     ),
 )
 
+LOCATION_SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
+    AccuWeatherSensorDescription(
+        key="city",
+        name="Location City",
+        value_fn=lambda data: data if isinstance(data, str) else "Unknown City",
+        device_class=SensorDeviceClass.ENUM,
+    ),
+    AccuWeatherSensorDescription(
+        key="country",
+        name="Location Country",
+        value_fn=lambda data: data if isinstance(data, str) else "Unknown Country",
+        device_class=SensorDeviceClass.ENUM,
+    ),
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -459,6 +474,8 @@ async def async_setup_entry(
         entry.runtime_data.coordinator_health_group
     )
 
+    location_coordinator = entry.runtime_data.coordinator_location
+
     sensors: list[
         AccuWeatherSensor
         | AccuWeatherForecastSensor
@@ -468,6 +485,12 @@ async def async_setup_entry(
         AccuWeatherSensor(observation_coordinator, description)
         for description in SENSOR_TYPES
     ]
+    sensors.extend(
+        [
+            AccuWeatherSensor(location_coordinator, description)
+            for description in LOCATION_SENSOR_TYPES
+        ]
+    )
 
     sensors.extend(
         [
@@ -540,14 +563,28 @@ class AccuWeatherSensor(
 
     @staticmethod
     def _get_sensor_data(
-        sensors: dict[str, Any],
+        sensors: dict[str, Any] | str,
         kind: str,
     ) -> Any:
         """Get sensor data."""
+        if isinstance(sensors, str):
+            return sensors
         if kind == "Precipitation":
-            return sensors["PrecipitationSummary"]["PastHour"]
+            return sensors.get("PrecipitationSummary", {}).get("PastHour", None)
+        return sensors.get(kind, None)
 
-        return sensors[kind]
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return the state attributes."""
+        attributes = self.entity_description.attr_fn(self.coordinator.data)
+        # Add location details
+        attributes.update(
+            {
+                "city": getattr(self.coordinator, "city", "Unknown City"),
+                "country": getattr(self.coordinator, "country", "Unknown Country"),
+            }
+        )
+        return attributes
 
 
 class AccuWeatherForecastSensor(

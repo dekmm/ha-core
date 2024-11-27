@@ -12,12 +12,15 @@ class WeatherIndexCard extends HTMLElement {
   render(hass) {
 
     const locationSensor = this.config?.location_sensor || null;
-    let locationName = "Your Location";
+    let locationName = "Location Unavailable";
 
     if (locationSensor) {
       const locationState = hass.states[locationSensor];
-      locationName = locationState ? locationState.state : "Location Unavailable";
+      locationName = locationState
+        ? `${"sensor.accuweather_home_location_country"}, ${"sensor.accuweather_home_location_city"}`
+        : "Location Unavailable";
     }
+
 
     const COLORS = {
       gradients: {

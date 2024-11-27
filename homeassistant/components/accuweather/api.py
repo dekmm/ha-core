@@ -262,6 +262,60 @@ class AccuWeatherExt(AccuWeather):
         data = await self._async_get_list_data(url)
         return _parse_index_data(data)
 
+    # async def async_get_location_details(self) -> dict[str, Any]:
+    #     """Fetch location details using the location key."""
+    #     if not self._location_key:
+    #         raise ValueError("Location key is not set.")
+
+    #     url = f"{BASE_URL}/locations/v1/{self._location_key}?apikey={self._api_key}"
+    #     response = await self._async_get_data(url)
+    #     a = print(response)
+    #     return a
+
+    async def async_get_location_details(self) -> dict[str, Any]:
+        """Fetch location details using the location key."""
+        if not self._location_key:
+            raise ValueError("Location key is not set.")
+
+        url = f"{BASE_URL}/locations/v1/{self._location_key}?apikey={self._api_key}"
+        response = await self._async_get_data(url)
+        _LOGGER.debug("Location details API response: %s", response)
+
+        if not isinstance(response, dict):
+            raise ApiError(f"Unexpected response format: {response}")
+
+        # Extract key location details
+        location_details = {
+            "city": response.get("LocalizedName", "Unknown City"),
+            "state": response.get("AdministrativeArea", {}).get(
+                "LocalizedName", "Unknown State"
+            ),
+            "country": response.get("Country", {}).get(
+                "LocalizedName", "Unknown Country"
+            ),
+            "region": response.get("Region", {}).get("LocalizedName", "Unknown Region"),
+            "timezone": response.get("TimeZone", {}).get("Name", "Unknown Timezone"),
+            "latitude": response.get("GeoPosition", {}).get(
+                "Latitude", "Unknown Latitude"
+            ),
+            "longitude": response.get("GeoPosition", {}).get(
+                "Longitude", "Unknown Longitude"
+            ),
+        }
+
+        _LOGGER.info(
+            "Location Details Fetched: City: %s, State: %s, Country: %s, Region: %s, Timezone: %s, Coordinates: (%s, %s)",
+            location_details["city"],
+            location_details["state"],
+            location_details["country"],
+            location_details["region"],
+            location_details["timezone"],
+            location_details["latitude"],
+            location_details["longitude"],
+        )
+
+        return location_details
+
     async def _async_get_list_data(self, url: str) -> list[Any]:
         """Retrieve data from AccuWeather API."""
         async with self._session.get(url, headers={"Content-Encoding": "gzip"}) as resp:

@@ -240,8 +240,19 @@
       },
       "migraine_headache_forecast": {
         "name": "Migraine Headache Forecast"
+      },
+      "location_city": {
+        "name": "Location City",
+        "state": {
+          "unknown": "Unknown City"
+        }
+      },
+      "location_country": {
+        "name": "Location Country",
+        "state": {
+          "unknown": "Unknown Country"
+        }
       }
-
     }
   },
   "system_health": {
