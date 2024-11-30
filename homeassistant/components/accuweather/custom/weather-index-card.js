@@ -267,7 +267,7 @@ class WeatherIndexCard extends HTMLElement {
         });
         return acc;
       },
-      {}
+      {},
     );
 
     const generateDateLabels = (numDays) => {
@@ -277,7 +277,7 @@ class WeatherIndexCard extends HTMLElement {
         const date = new Date(today);
         date.setDate(today.getDate() + i);
         labels.push(
-          date.toLocaleDateString("en-US", { month: "short", day: "numeric" })
+          date.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
         );
       }
       return labels;
@@ -398,7 +398,7 @@ class WeatherIndexCard extends HTMLElement {
             <div class="today-name">${index.name}</div>
             <div class="today-label">${index.value}</div>
           </div>
-        `
+        `,
           )
           .join("")}
       </div>
@@ -522,9 +522,20 @@ class WeatherIndexCard extends HTMLElement {
     return document.createElement("hui-generic-entity-row");
   }
 
+  static getStubConfig() {
+    return {};
+  }
+
   getCardSize() {
     return 2;
   }
 }
 
 customElements.define("weather-index-card", WeatherIndexCard);
+window.customCards = window.customCards || [];
+window.customCards.push({
+  type: "weather-index-card",
+  name: "Weather Index Card",
+  preview: false,
+  description: "A custom card to display weather index data",
+});
