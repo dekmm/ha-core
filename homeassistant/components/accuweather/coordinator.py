@@ -79,7 +79,7 @@ class AccuWeatherIndexGroupDataUpdateCoordinator(
         coordinator_type: str,
         update_interval: timedelta,
         index_id: IndexGroup,
-        range: IndexRange = IndexRange.ONE_DAY,
+        index_range: IndexRange = IndexRange.ONE_DAY,
     ) -> None:
         """Initialize."""
         self.accuweather = accuweather
@@ -91,7 +91,7 @@ class AccuWeatherIndexGroupDataUpdateCoordinator(
         self.device_info = _get_device_info(self.location_key, name)
 
         self.index_id = index_id
-        self.range = range
+        self.index_range = index_range
 
         super().__init__(
             hass,
@@ -105,7 +105,7 @@ class AccuWeatherIndexGroupDataUpdateCoordinator(
         try:
             async with timeout(10):
                 result = await self.accuweather.async_get_index_group_data(
-                    self.index_id, self.range
+                    self.index_id, self.index_range
                 )
         except EXCEPTIONS as error:
             raise UpdateFailed(error) from error
