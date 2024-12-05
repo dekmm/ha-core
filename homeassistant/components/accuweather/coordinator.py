@@ -123,6 +123,7 @@ class AccuWeatherIndexGroupDataUpdateCoordinator(
                             data["Category"],
                             data["CategoryValue"],
                             data["LocalDateTime"],
+                            data["Text"],
                         )
         except EXCEPTIONS as error:
             raise UpdateFailed(error) from error

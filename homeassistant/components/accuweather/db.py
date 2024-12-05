@@ -32,6 +32,7 @@ class AccuWeatherIndexGroupDataStore:
                         category TEXT NOT NULL,
                         category_value INT NOT NULL,
                         timestamp DATETIME NOT NULL,
+                        text TEXT NOT NULL,
                         UNIQUE (location_key, index_group, timestamp) ON CONFLICT IGNORE
                     )
                 """)
@@ -47,6 +48,7 @@ class AccuWeatherIndexGroupDataStore:
         category: str,
         category_value: str,
         timestamp: str,
+        text: str,
     ) -> None:
         """Asynchronously insert data into the index data table."""
 
@@ -61,9 +63,10 @@ class AccuWeatherIndexGroupDataStore:
                         index_value,
                         category,
                         category_value,
-                        timestamp
+                        timestamp,
+                        text
                     )
-                    VALUES (?, ?, ?, ?, ?, ?)
+                    VALUES (?, ?, ?, ?, ?, ?, ?)
                 """,
                     (
                         location_key,
@@ -72,6 +75,7 @@ class AccuWeatherIndexGroupDataStore:
                         category,
                         category_value,
                         timestamp,
+                        text,
                     ),
                 )
                 conn.commit()
@@ -79,24 +83,42 @@ class AccuWeatherIndexGroupDataStore:
         await self.hass.async_add_executor_job(insert_data)
 
     async def async_query_data(
-        self, location_key: str, index_group: str, timestamp: str
-    ) -> Any:
+        self, location_key: str, timestamp: str
+    ) -> dict[str, dict]:
         """Asynchronously query data by index group and timestamp."""
 
-        def query_data() -> Any:
+        def query_data() -> dict[str, dict]:
             with sqlite3.connect(self._get_db_path()) as conn:
+                conn.row_factory = sqlite3.Row
                 cursor = conn.cursor()
                 cursor.execute(
                     """
-                    SELECT * FROM accuweather_index_data
-                    WHERE location_key = ? AND index_group = ? AND timestamp = ?
+                    SELECT
+                        index_group,
+                        index_value AS Value,
+                        category AS Category,
+                        category_value AS CategoryValue,
+                        timestamp AS LocalDateTime,
+                        text AS Text
+                    FROM accuweather_index_data
+                    WHERE location_key = ? AND timestamp = ?
                 """,
                     (
                         location_key,
-                        index_group,
                         timestamp,
                     ),
                 )
-                return cursor.fetchone()
+                rows = cursor.fetchall()
+                return self.__parse_query_results([dict(row) for row in rows])
 
         return await self.hass.async_add_executor_job(query_data)
+
+    @staticmethod
+    def __parse_query_results(results: list[dict[str, Any]]) -> dict[str, dict]:
+        """Parse the query result."""
+        res = {}
+        for result in results:
+            group = result.pop("index_group")
+            res[group] = result
+
+        return res
