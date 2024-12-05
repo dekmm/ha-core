@@ -322,12 +322,16 @@ def _parse_index_data(data: list[dict[str, Any]]) -> list[dict[str, dict[str, An
     for item in data:
         item.pop("ID")
         item.pop("Ascending")
-        item.pop("LocalDateTime")
         item.pop("Link")
         item.pop("MobileLink")
 
         name = item.pop("Name")
         date = item.pop("EpochDateTime")
+
+        local = item.pop("LocalDateTime")
+        local = local.split("T")[0]
+
+        item["LocalDateTime"] = local
 
         grouped_data[date][name] = item
 

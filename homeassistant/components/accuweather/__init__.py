@@ -74,12 +74,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: AccuWeatherConfigEntry) 
         UPDATE_INTERVAL_DAILY_FORECAST,
     )
 
+    datastore_index_group = AccuWeatherIndexGroupDataStore(hass)
+
     coordinator_index_group = AccuWeatherIndexGroupDataUpdateCoordinator(
         hass,
         accuweather,
         name,
         "index group",
         UPDATE_INTERVAL_INDEX_GROUP,
+        datastore_index_group,
         IndexGroup.HEALTH,
         IndexRange.FIVE_DAYS,
     )
@@ -88,13 +91,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: AccuWeatherConfigEntry) 
         hass, accuweather, name, UPDATE_INTERVAL_INDEX_GROUP
     )
 
-    datastore_index_group = AccuWeatherIndexGroupDataStore(hass)
+    await datastore_index_group.async_create_index_data_table()
 
     await coordinator_observation.async_config_entry_first_refresh()
     await coordinator_daily_forecast.async_config_entry_first_refresh()
     await coordinator_index_group.async_config_entry_first_refresh()
     await coordinator_location.async_config_entry_first_refresh()
-    await datastore_index_group.async_create_index_data_table()
 
     # Log fetched location details
     _LOGGER.info(

@@ -18,6 +18,7 @@ from homeassistant.helpers.update_coordinator import (
 
 from .api import AccuWeatherExt, IndexGroup, IndexRange
 from .const import DOMAIN, MANUFACTURER
+from .db import AccuWeatherIndexGroupDataStore
 
 EXCEPTIONS = (ApiError, ClientConnectorError, InvalidApiKeyError, RequestsExceededError)
 
@@ -78,6 +79,7 @@ class AccuWeatherIndexGroupDataUpdateCoordinator(
         name: str,
         coordinator_type: str,
         update_interval: timedelta,
+        index_data_store: AccuWeatherIndexGroupDataStore,
         index_id: IndexGroup,
         index_range: IndexRange = IndexRange.ONE_DAY,
     ) -> None:
@@ -92,6 +94,7 @@ class AccuWeatherIndexGroupDataUpdateCoordinator(
 
         self.index_id = index_id
         self.index_range = index_range
+        self.index_data_store = index_data_store
 
         super().__init__(
             hass,
@@ -107,6 +110,20 @@ class AccuWeatherIndexGroupDataUpdateCoordinator(
                 result = await self.accuweather.async_get_index_group_data(
                     self.index_id, self.index_range
                 )
+
+                if TYPE_CHECKING:
+                    assert self.location_key is not None
+
+                for day in result:
+                    for index, data in day.items():
+                        await self.index_data_store.async_insert_data(
+                            self.location_key,
+                            index,
+                            data["Value"],
+                            data["Category"],
+                            data["CategoryValue"],
+                            data["LocalDateTime"],
+                        )
         except EXCEPTIONS as error:
             raise UpdateFailed(error) from error
 

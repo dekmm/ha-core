@@ -28,8 +28,11 @@ class AccuWeatherIndexGroupDataStore:
                         id INTEGER PRIMARY KEY AUTOINCREMENT,
                         location_key TEXT NOT NULL,
                         index_group TEXT NOT NULL,
-                        index_value TEXT NOT NULL,
-                        timestamp TEXT NOT NULL
+                        index_value INT NOT NULL,
+                        category TEXT NOT NULL,
+                        category_value INT NOT NULL,
+                        timestamp DATETIME NOT NULL,
+                        UNIQUE (location_key, index_group, timestamp) ON CONFLICT IGNORE
                     )
                 """)
                 conn.commit()
@@ -37,7 +40,13 @@ class AccuWeatherIndexGroupDataStore:
         await self.hass.async_add_executor_job(create_table)
 
     async def async_insert_data(
-        self, location_key: str, index_group: str, index_value: str, timestamp: str
+        self,
+        location_key: str,
+        index_group: str,
+        index_value: str,
+        category: str,
+        category_value: str,
+        timestamp: str,
     ) -> None:
         """Asynchronously insert data into the index data table."""
 
@@ -46,16 +55,32 @@ class AccuWeatherIndexGroupDataStore:
                 cursor = conn.cursor()
                 cursor.execute(
                     """
-                    INSERT INTO accuweather_index_data (location_key, index_group, index_value, timestamp)
-                    VALUES (?, ?, ?, ?)
+                    INSERT INTO accuweather_index_data (
+                        location_key,
+                        index_group,
+                        index_value,
+                        category,
+                        category_value,
+                        timestamp
+                    )
+                    VALUES (?, ?, ?, ?, ?, ?)
                 """,
-                    (location_key, index_group, index_value, timestamp),
+                    (
+                        location_key,
+                        index_group,
+                        index_value,
+                        category,
+                        category_value,
+                        timestamp,
+                    ),
                 )
                 conn.commit()
 
         await self.hass.async_add_executor_job(insert_data)
 
-    async def async_query_data(self, index_group: str, timestamp: str) -> Any:
+    async def async_query_data(
+        self, location_key: str, index_group: str, timestamp: str
+    ) -> Any:
         """Asynchronously query data by index group and timestamp."""
 
         def query_data() -> Any:
@@ -63,9 +88,11 @@ class AccuWeatherIndexGroupDataStore:
                 cursor = conn.cursor()
                 cursor.execute(
                     """
-                    SELECT * FROM accuweather_index_data WHERE index_group = ? AND timestamp = ?
+                    SELECT * FROM accuweather_index_data
+                    WHERE location_key = ? AND index_group = ? AND timestamp = ?
                 """,
                     (
+                        location_key,
                         index_group,
                         timestamp,
                     ),
