@@ -270,7 +270,7 @@ class AccuWeatherExt(AccuWeather):
             ),
         }
 
-        _LOGGER.info(
+        _LOGGER.debug(
             "Location Details Fetched: City: %s, State: %s, Country: %s, Region: %s, Timezone: %s, Coordinates: (%s, %s)",
             location_details["city"],
             location_details["state"],

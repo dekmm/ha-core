@@ -99,7 +99,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: AccuWeatherConfigEntry) 
     await coordinator_location.async_config_entry_first_refresh()
 
     # Log fetched location details
-    _LOGGER.info(
+    _LOGGER.debug(
         "Fetched location details: City: %s, Country: %s",
         coordinator_location.city,
         coordinator_location.country,

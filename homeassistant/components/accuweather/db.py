@@ -122,3 +122,24 @@ class AccuWeatherIndexGroupDataStore:
             res[group] = result
 
         return res
+
+    async def async_query_index_count(
+        self, location_key: str, timestamp: str, data_range: int = 1
+    ) -> int:
+        """Asynchronously query the count of index data for a location key and timestamp."""
+
+        def query_index_count() -> int:
+            with sqlite3.connect(self._get_db_path()) as conn:
+                cursor = conn.cursor()
+                cursor.execute(
+                    """
+                    SELECT COUNT(DISTINCT timestamp)
+                    FROM accuweather_index_data
+                    WHERE location_key = ? AND
+                    timestamp BETWEEN datetime(?, '-1 day') AND datetime(?, ?)
+                    """,
+                    (location_key, timestamp, timestamp, f"+{data_range - 1} day"),
+                )
+                return int(cursor.fetchone()[0])
+
+        return await self.hass.async_add_executor_job(query_index_count)
