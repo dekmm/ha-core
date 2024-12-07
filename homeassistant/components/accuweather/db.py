@@ -2,6 +2,7 @@
 
 import sqlite3
 from typing import Any
+import uuid
 
 from homeassistant.core import HomeAssistant
 
@@ -25,7 +26,7 @@ class AccuWeatherIndexGroupDataStore:
                 cursor = conn.cursor()
                 cursor.execute("""
                     CREATE TABLE IF NOT EXISTS accuweather_index_data (
-                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        id TEXT PRIMARY KEY,
                         location_key TEXT NOT NULL,
                         index_group TEXT NOT NULL,
                         index_value INT NOT NULL,
@@ -33,7 +34,7 @@ class AccuWeatherIndexGroupDataStore:
                         category_value INT NOT NULL,
                         timestamp DATETIME NOT NULL,
                         text TEXT NOT NULL,
-                        UNIQUE (location_key, index_group, timestamp) ON CONFLICT IGNORE
+                        UNIQUE (location_key, index_group, timestamp) ON CONFLICT REPLACE
                     )
                 """)
                 conn.commit()
@@ -58,6 +59,7 @@ class AccuWeatherIndexGroupDataStore:
                 cursor.execute(
                     """
                     INSERT INTO accuweather_index_data (
+                        id,
                         location_key,
                         index_group,
                         index_value,
@@ -66,9 +68,10 @@ class AccuWeatherIndexGroupDataStore:
                         timestamp,
                         text
                     )
-                    VALUES (?, ?, ?, ?, ?, ?, ?)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                     (
+                        str(uuid.uuid4()),
                         location_key,
                         index_group,
                         index_value,

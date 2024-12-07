@@ -1,7 +1,7 @@
 """The AccuWeather coordinator."""
 
 from asyncio import timeout
-from datetime import datetime, timedelta
+from datetime import timedelta
 import logging
 from typing import TYPE_CHECKING, Any
 
@@ -107,40 +107,12 @@ class AccuWeatherIndexGroupDataUpdateCoordinator(
         """Update data via library."""
         try:
             async with timeout(10):
+                result = await self.accuweather.async_get_index_group_data(
+                    self.index_id, self.index_range
+                )
+
                 if TYPE_CHECKING:
                     assert self.location_key is not None
-
-                current_date = datetime.now().strftime("%Y-%m-%d")
-
-                rng = {
-                    IndexRange.ONE_DAY: 1,
-                    IndexRange.FIVE_DAYS: 5,
-                    IndexRange.TEN_DAYS: 10,
-                    IndexRange.FIFTEEN_DAYS: 15,
-                }.get(self.index_range, 1)
-
-                if (
-                    await self.index_data_store.async_query_index_count(
-                        self.location_key, current_date, rng
-                    )
-                    != rng
-                ):
-                    _LOGGER.debug("Fetching new data for %s", self.index_id)
-                    result = await self.accuweather.async_get_index_group_data(
-                        self.index_id, self.index_range
-                    )
-                else:
-                    _LOGGER.debug("Using cached data for %s", self.index_id)
-                    dates = [
-                        (datetime.now() + timedelta(days=i)).strftime("%Y-%m-%d")
-                        for i in range(rng)
-                    ]
-                    result = [
-                        await self.index_data_store.async_query_data(
-                            self.location_key, date
-                        )
-                        for date in dates
-                    ]
 
                 for day in result:
                     for index, data in day.items():
