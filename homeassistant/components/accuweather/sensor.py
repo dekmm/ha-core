@@ -125,7 +125,7 @@ INDEX_SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
         translation_key="migraine_headache_forecast",
     ),
 )
-FORECAST_SENSOR_TYPES:tuple[AccuWeatherSensorDescription, ...] = (
+FORECAST_SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
     AccuWeatherSensorDescription(
         key="AirQuality",
         value_fn=lambda data: cast(str, data[ATTR_CATEGORY]),
@@ -640,7 +640,6 @@ class AccuWeatherIndexSensor(
         super().__init__(coordinator)
 
         self.entity_description = description
-        self.forecast_day = forecast_day
         self._sensor_data = self._get_sensor_data(
             coordinator.data, description.key, forecast_day
         )
@@ -648,6 +647,8 @@ class AccuWeatherIndexSensor(
             f"{coordinator.location_key}-{description.key}-day-{forecast_day}".lower()
         )
         self._attr_device_info = coordinator.device_info
+        self._attr_translation_placeholders = {"forecast_day": str(forecast_day)}
+        self.forecast_day = forecast_day
 
     @property
     def native_value(self) -> str | int | float | None:
