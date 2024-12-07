@@ -25,6 +25,7 @@ from .coordinator import (
     AccuWeatherLocationDataUpdateCoordinator,
     AccuWeatherObservationDataUpdateCoordinator,
 )
+from .db import AccuWeatherIndexGroupDataStore
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -39,7 +40,7 @@ class AccuWeatherData:
     coordinator_daily_forecast: AccuWeatherDailyForecastDataUpdateCoordinator
     coordinator_index_group: AccuWeatherIndexGroupDataUpdateCoordinator
     coordinator_location: AccuWeatherLocationDataUpdateCoordinator
-
+    datastore_index_group: AccuWeatherIndexGroupDataStore
 
 
 type AccuWeatherConfigEntry = ConfigEntry[AccuWeatherData]
@@ -73,12 +74,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: AccuWeatherConfigEntry) 
         UPDATE_INTERVAL_DAILY_FORECAST,
     )
 
+    datastore_index_group = AccuWeatherIndexGroupDataStore(hass)
+
     coordinator_index_group = AccuWeatherIndexGroupDataUpdateCoordinator(
         hass,
         accuweather,
         name,
         "index group",
         UPDATE_INTERVAL_INDEX_GROUP,
+        datastore_index_group,
         IndexGroup.HEALTH,
         IndexRange.FIVE_DAYS,
     )
@@ -87,13 +91,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: AccuWeatherConfigEntry) 
         hass, accuweather, name, UPDATE_INTERVAL_INDEX_GROUP
     )
 
+    await datastore_index_group.async_create_index_data_table()
+
     await coordinator_observation.async_config_entry_first_refresh()
     await coordinator_daily_forecast.async_config_entry_first_refresh()
     await coordinator_index_group.async_config_entry_first_refresh()
     await coordinator_location.async_config_entry_first_refresh()
 
     # Log fetched location details
-    _LOGGER.info(
+    _LOGGER.debug(
         "Fetched location details: City: %s, Country: %s",
         coordinator_location.city,
         coordinator_location.country,
@@ -104,6 +110,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: AccuWeatherConfigEntry) 
         coordinator_daily_forecast=coordinator_daily_forecast,
         coordinator_index_group=coordinator_index_group,
         coordinator_location=coordinator_location,
+        datastore_index_group=datastore_index_group,
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
