@@ -1,9 +1,9 @@
 """Define tests for the AccuWeather config flow."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, patch  # modify with patch
 
 from accuweather import ApiError, InvalidApiKeyError, RequestsExceededError
-import pytest  # added
+import pytest  # new
 
 from homeassistant.components.accuweather.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
@@ -21,7 +21,7 @@ VALID_CONFIG = {
 }
 
 
-# modification
+# new
 @pytest.fixture
 def mock_accuweather_client():
     """Mock the AccuWeather client."""
@@ -30,22 +30,50 @@ def mock_accuweather_client():
     return mock_client
 
 
+# async def test_show_form(hass: HomeAssistant) -> None:
+#   """Test that the form is served with no input."""
+#   result = await hass.config_entries.flow.async_init(
+#       DOMAIN, context={"source": SOURCE_USER}
+#   )
+
+#   assert result["type"] is FlowResultType.FORM
+#   assert result["step_id"] == "user"
+
+
+# async def test_api_key_too_short(hass: HomeAssistant) -> None:
+#   """Test that errors are shown when API key is too short."""
+# The API key length check is done by the library without polling the AccuWeather
+# server so we don't need to patch the library method.
+#   result = await hass.config_entries.flow.async_init(
+#       DOMAIN,
+#       context={"source": SOURCE_USER},
+#       data={
+#           CONF_NAME: "abcd",
+#           CONF_API_KEY: "foo",
+#            CONF_LATITUDE: 55.55,
+#           CONF_LONGITUDE: 122.12,
+#       },
+#   )
+
+#   assert result["errors"] == {CONF_API_KEY: "invalid_api_key"}
+
+
 async def test_invalid_api_key(
     hass: HomeAssistant, mock_accuweather_client: AsyncMock
 ) -> None:
     """Test that errors are shown when API key is invalid."""
-    # Modification-Simulate an InvalidApiKeyError
     mock_accuweather_client.async_get_location.side_effect = InvalidApiKeyError(
         "Invalid API key"
     )
-
-    # modified 3 lines Correctly patch the AccuWeather class used in config_flow.py
+    # new : 3 lines , Correctly patch the AccuWeather class used in config_flow.py
     with patch(
         "homeassistant.components.accuweather.config_flow.AccuWeather",
         return_value=mock_accuweather_client,
     ):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}, data=VALID_CONFIG
+            DOMAIN,
+            context={"source": SOURCE_USER},
+            data=VALID_CONFIG,
         )
 
     assert result["errors"] == {CONF_API_KEY: "invalid_api_key"}
@@ -54,16 +82,19 @@ async def test_invalid_api_key(
 async def test_api_error(
     hass: HomeAssistant, mock_accuweather_client: AsyncMock
 ) -> None:
-    """Test that API errors are handled."""
-    mock_accuweather_client.async_get_location.side_effect = ApiError("API error")
-
+    """Test API error."""
+    mock_accuweather_client.async_get_location.side_effect = ApiError(
+        "Invalid response from AccuWeather API"
+    )
     # modified 3 lines
     with patch(
         "homeassistant.components.accuweather.config_flow.AccuWeather",
         return_value=mock_accuweather_client,
     ):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}, data=VALID_CONFIG
+            DOMAIN,
+            context={"source": SOURCE_USER},
+            data=VALID_CONFIG,
         )
 
     assert result["errors"] == {"base": "cannot_connect"}
@@ -72,7 +103,7 @@ async def test_api_error(
 async def test_requests_exceeded_error(
     hass: HomeAssistant, mock_accuweather_client: AsyncMock
 ) -> None:
-    """Test request exceeded error."""
+    """Test requests exceeded error."""
     mock_accuweather_client.async_get_location.side_effect = RequestsExceededError(
         "The allowed number of requests has been exceeded"
     )
@@ -82,7 +113,46 @@ async def test_requests_exceeded_error(
         return_value=mock_accuweather_client,
     ):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}, data=VALID_CONFIG
+            DOMAIN,
+            context={"source": SOURCE_USER},
+            data=VALID_CONFIG,
         )
 
     assert result["errors"] == {CONF_API_KEY: "requests_exceeded"}
+
+
+# async def test_integration_already_exists(
+#    hass: HomeAssistant, mock_accuweather_client: AsyncMock
+# ) -> None:
+#    """Test we only allow a single config flow."""
+#   MockConfigEntry(
+#       domain=DOMAIN,
+#        unique_id="123456",
+#       data=VALID_CONFIG,
+#   ).add_to_hass(hass)
+
+#   result = await hass.config_entries.flow.async_init(
+#       DOMAIN,
+#       context={"source": SOURCE_USER},
+#       data=VALID_CONFIG,
+#   )
+
+#   assert result["type"] is FlowResultType.ABORT
+#   assert result["reason"] == "single_instance_allowed"
+
+# async def test_create_entry(
+#   hass: HomeAssistant, mock_accuweather_client: AsyncMock
+# ) -> None:
+#   """Test that the user step works."""
+#   result = await hass.config_entries.flow.async_init(
+#        DOMAIN,
+#       context={"source": SOURCE_USER},
+#        data=VALID_CONFIG,
+#   )
+
+#   assert result["type"] is FlowResultType.CREATE_ENTRY
+#   assert result["title"] == "abcd"
+#   assert result["data"][CONF_NAME] == "abcd"
+#   assert result["data"][CONF_LATITUDE] == 55.55
+#   assert result["data"][CONF_LONGITUDE] == 122.12
+#   assert result["data"][CONF_API_KEY] == "32-character-string-1234567890qw"
