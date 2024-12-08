@@ -16,6 +16,7 @@ from homeassistant.helpers.update_coordinator import (
     UpdateFailed,
 )
 
+from . import notification
 from .api import AccuWeatherExt, IndexGroup, IndexRange
 from .const import DOMAIN, MANUFACTURER
 from .db import AccuWeatherIndexGroupDataStore
@@ -114,8 +115,14 @@ class AccuWeatherIndexGroupDataUpdateCoordinator(
                 if TYPE_CHECKING:
                     assert self.location_key is not None
 
-                for day in result:
+                for idx, day in enumerate(result):
                     for index, data in day.items():
+                        if idx == 0:
+                            notification.send_health_notification(
+                                self.hass,
+                                index,
+                                data,
+                            )
                         await self.index_data_store.async_insert_data(
                             self.location_key,
                             index,
