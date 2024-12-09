@@ -45,6 +45,27 @@
       },
       "uv_index_forecast": {
         "default": "mdi:weather-sunny"
+      },
+      "healthy_heart_fitness_forecast": {
+        "default": "mdi:heart-pulse"
+      },
+      "dust_and_dander_forecast": {
+        "default": "mdi:air-filter"
+      },
+      "arthritis_pain_forecast": {
+        "default": "mdi:human-walker"
+      },
+      "asthma_forecast": {
+        "default": "mdi:lungs"
+      },
+      "common_cold_forecast": {
+        "default": "mdi:snowflake-thermometer"
+      },
+      "flu_forecast": {
+        "default": "mdi:emoticon-sick"
+      },
+      "migraine_headache_forecast": {
+        "default": "mdi:head-flash"
       }
     }
   }

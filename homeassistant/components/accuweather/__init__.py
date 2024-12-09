@@ -5,8 +5,6 @@ from __future__ import annotations
 from dataclasses import dataclass
 import logging
 
-from accuweather import AccuWeather
-
 from homeassistant.components.sensor import DOMAIN as SENSOR_PLATFORM
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_NAME, Platform
@@ -14,11 +12,20 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DOMAIN, UPDATE_INTERVAL_DAILY_FORECAST, UPDATE_INTERVAL_OBSERVATION
+from .api import AccuWeatherExt, IndexGroup, IndexRange
+from .const import (
+    DOMAIN,
+    UPDATE_INTERVAL_DAILY_FORECAST,
+    UPDATE_INTERVAL_INDEX_GROUP,
+    UPDATE_INTERVAL_OBSERVATION,
+)
 from .coordinator import (
     AccuWeatherDailyForecastDataUpdateCoordinator,
+    AccuWeatherIndexGroupDataUpdateCoordinator,
+    AccuWeatherLocationDataUpdateCoordinator,
     AccuWeatherObservationDataUpdateCoordinator,
 )
+from .db import AccuWeatherIndexGroupDataStore
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -31,6 +38,9 @@ class AccuWeatherData:
 
     coordinator_observation: AccuWeatherObservationDataUpdateCoordinator
     coordinator_daily_forecast: AccuWeatherDailyForecastDataUpdateCoordinator
+    coordinator_index_group: AccuWeatherIndexGroupDataUpdateCoordinator
+    coordinator_location: AccuWeatherLocationDataUpdateCoordinator
+    datastore_index_group: AccuWeatherIndexGroupDataStore
 
 
 type AccuWeatherConfigEntry = ConfigEntry[AccuWeatherData]
@@ -46,7 +56,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: AccuWeatherConfigEntry) 
     _LOGGER.debug("Using location_key: %s", location_key)
 
     websession = async_get_clientsession(hass)
-    accuweather = AccuWeather(api_key, websession, location_key=location_key)
+    accuweather = AccuWeatherExt(api_key, websession, location_key=location_key)
 
     coordinator_observation = AccuWeatherObservationDataUpdateCoordinator(
         hass,
@@ -64,12 +74,43 @@ async def async_setup_entry(hass: HomeAssistant, entry: AccuWeatherConfigEntry) 
         UPDATE_INTERVAL_DAILY_FORECAST,
     )
 
+    datastore_index_group = AccuWeatherIndexGroupDataStore(hass)
+
+    coordinator_index_group = AccuWeatherIndexGroupDataUpdateCoordinator(
+        hass,
+        accuweather,
+        name,
+        "index group",
+        UPDATE_INTERVAL_INDEX_GROUP,
+        datastore_index_group,
+        IndexGroup.HEALTH,
+        IndexRange.FIVE_DAYS,
+    )
+
+    coordinator_location = AccuWeatherLocationDataUpdateCoordinator(
+        hass, accuweather, name, UPDATE_INTERVAL_INDEX_GROUP
+    )
+
+    await datastore_index_group.async_create_index_data_table()
+
     await coordinator_observation.async_config_entry_first_refresh()
     await coordinator_daily_forecast.async_config_entry_first_refresh()
+    await coordinator_index_group.async_config_entry_first_refresh()
+    await coordinator_location.async_config_entry_first_refresh()
+
+    # Log fetched location details
+    _LOGGER.debug(
+        "Fetched location details: City: %s, Country: %s",
+        coordinator_location.city,
+        coordinator_location.country,
+    )
 
     entry.runtime_data = AccuWeatherData(
         coordinator_observation=coordinator_observation,
         coordinator_daily_forecast=coordinator_daily_forecast,
+        coordinator_index_group=coordinator_index_group,
+        coordinator_location=coordinator_location,
+        datastore_index_group=datastore_index_group,
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

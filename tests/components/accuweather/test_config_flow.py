@@ -1,13 +1,16 @@
 """Define tests for the AccuWeather config flow."""
 
 from unittest.mock import AsyncMock, patch  # update
-import pytest  # added
+
 from accuweather import ApiError, InvalidApiKeyError, RequestsExceededError
+import pytest  # added
+
 from homeassistant.components.accuweather.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+
 from tests.common import MockConfigEntry
 
 VALID_CONFIG = {

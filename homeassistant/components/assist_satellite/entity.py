@@ -17,6 +17,7 @@ from homeassistant.components.assist_pipeline import (
     PipelineEvent,
     PipelineEventType,
     PipelineStage,
+    StageSettings,
     async_get_pipeline,
     async_get_pipelines,
     async_pipeline_from_audio_stream,
@@ -335,8 +336,7 @@ class AssistSatelliteEntity(entity.Entity):
                 audio_settings=AudioSettings(
                     silence_seconds=self._resolve_vad_sensitivity()
                 ),
-                start_stage=start_stage,
-                end_stage=end_stage,
+                stage_settings=StageSettings(start_stage, end_stage),
             ),
             f"{self.entity_id}_pipeline",
         )

@@ -24,7 +24,10 @@ from wyoming.vad import VoiceStarted, VoiceStopped
 from wyoming.wake import Detect, Detection
 
 from homeassistant.components import assist_pipeline, intent, stt, tts
-from homeassistant.components.assist_pipeline import select as pipeline_select
+from homeassistant.components.assist_pipeline import (
+    StageSettings,
+    select as pipeline_select,
+)
 from homeassistant.components.assist_pipeline.vad import VadSensitivity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import Context, HomeAssistant, callback
@@ -402,8 +405,7 @@ class WyomingSatellite:
                     channel=stt.AudioChannels.CHANNEL_MONO,
                 ),
                 stt_stream=stt_stream,
-                start_stage=start_stage,
-                end_stage=end_stage,
+                stage_settings=StageSettings(start_stage, end_stage),
                 tts_audio_output="wav",
                 pipeline_id=pipeline_id,
                 audio_settings=assist_pipeline.AudioSettings(
