@@ -27,7 +27,6 @@ from .coordinator import (
 )
 from .db import AccuWeatherIndexGroupDataStore
 
-AccuWeather = AccuWeatherExt
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [Platform.SENSOR, Platform.WEATHER]
