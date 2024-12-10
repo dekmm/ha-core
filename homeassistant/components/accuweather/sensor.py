@@ -77,13 +77,6 @@ INDEX_SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
             "LocalDateTime": data.get("LocalDateTime"),
         },
         device_class=SensorDeviceClass.ENUM,
-        options=[
-            "Excellent",
-            "Very Good",
-            "Good",
-            "Fair",
-            "Poor",
-        ],  # The category values the sensor can obtain (found in API Index description)
         translation_key="healthy_heart_fitness_forecast",
     ),
     AccuWeatherSensorDescription(
@@ -98,7 +91,6 @@ INDEX_SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
             "LocalDateTime": data.get("LocalDateTime"),
         },
         device_class=SensorDeviceClass.ENUM,
-        options=["Extreme", "Very High", "High", "Moderate", "Low"],
         translation_key="dust_and_dander_forecast",
     ),
     AccuWeatherSensorDescription(
@@ -113,7 +105,6 @@ INDEX_SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
             "LocalDateTime": data.get("LocalDateTime"),
         },
         device_class=SensorDeviceClass.ENUM,
-        options=["At Extreme Risk", "At High Risk", "At Risk", "Neutral", "Beneficial"],
         translation_key="arthritis_pain_forecast",
     ),
     AccuWeatherSensorDescription(
@@ -128,7 +119,6 @@ INDEX_SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
             "LocalDateTime": data.get("LocalDateTime"),
         },
         device_class=SensorDeviceClass.ENUM,
-        options=["At Extreme Risk", "At High Risk", "At Risk", "Neutral", "Beneficial"],
         translation_key="asthma_forecast",
     ),
     AccuWeatherSensorDescription(
@@ -143,7 +133,6 @@ INDEX_SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
             "LocalDateTime": data.get("LocalDateTime"),
         },
         device_class=SensorDeviceClass.ENUM,
-        options=["At Extreme Risk", "At High Risk", "At Risk", "Neutral", "Beneficial"],
         translation_key="common_cold_forecast",
     ),
     AccuWeatherSensorDescription(
@@ -158,7 +147,6 @@ INDEX_SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
             "LocalDateTime": data.get("LocalDateTime"),
         },
         device_class=SensorDeviceClass.ENUM,
-        options=["At Extreme Risk", "At High Risk", "At Risk", "Neutral", "Beneficial"],
         translation_key="flu_forecast",
     ),
     AccuWeatherSensorDescription(
@@ -173,7 +161,6 @@ INDEX_SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
             "LocalDateTime": data.get("LocalDateTime"),
         },
         device_class=SensorDeviceClass.ENUM,
-        options=["At Extreme Risk", "At High Risk", "At Risk", "Neutral", "Beneficial"],
         translation_key="migraine_headache_forecast",
     ),
 )
