@@ -164,7 +164,7 @@ class WeatherIndexCard extends HTMLElement {
       },
       {
         sensor: "sensor.home_common_cold_forecast",
-        icon: "mdi:snowflake-thermometer",
+        icon: "mdi:face-mask",
         name: "Common Cold",
       },
       {
@@ -184,13 +184,18 @@ class WeatherIndexCard extends HTMLElement {
       },
       {
         sensor: "sensor.home_dust_dander_forecast",
-        icon: "mdi:air-filter",
+        icon: "mdi:cloud-alert",
         name: "Dust & Dander",
       },
     ];
 
     const groupedSensors = {
       "Arthritis Pain Forecast": [
+        "sensor.home_arthritis_pain_forecast_6",
+        "sensor.home_arthritis_pain_forecast_7",
+        "sensor.home_arthritis_pain_forecast_8",
+        "sensor.home_arthritis_pain_forecast_9",
+        "sensor.home_arthritis_pain_forecast_10",
         "sensor.home_arthritis_pain_forecast",
         "sensor.home_arthritis_pain_forecast_2",
         "sensor.home_arthritis_pain_forecast_3",
@@ -198,6 +203,11 @@ class WeatherIndexCard extends HTMLElement {
         "sensor.home_arthritis_pain_forecast_5",
       ],
       "Asthma Forecast": [
+        "sensor.home_asthma_forecast_6",
+        "sensor.home_asthma_forecast_7",
+        "sensor.home_asthma_forecast_8",
+        "sensor.home_asthma_forecast_9",
+        "sensor.home_asthma_forecast_10",
         "sensor.home_asthma_forecast",
         "sensor.home_asthma_forecast_2",
         "sensor.home_asthma_forecast_3",
@@ -205,6 +215,11 @@ class WeatherIndexCard extends HTMLElement {
         "sensor.home_asthma_forecast_5",
       ],
       "Common Cold Forecast": [
+        "sensor.home_common_cold_forecast_6",
+        "sensor.home_common_cold_forecast_7",
+        "sensor.home_common_cold_forecast_8",
+        "sensor.home_common_cold_forecast_9",
+        "sensor.home_common_cold_forecast_10",
         "sensor.home_common_cold_forecast",
         "sensor.home_common_cold_forecast_2",
         "sensor.home_common_cold_forecast_3",
@@ -212,6 +227,11 @@ class WeatherIndexCard extends HTMLElement {
         "sensor.home_common_cold_forecast_5",
       ],
       "Flu Forecast": [
+        "sensor.home_flu_forecast_10",
+        "sensor.home_flu_forecast_9",
+        "sensor.home_flu_forecast_8",
+        "sensor.home_flu_forecast_7",
+        "sensor.home_flu_forecast_6",
         "sensor.home_flu_forecast",
         "sensor.home_flu_forecast_2",
         "sensor.home_flu_forecast_3",
@@ -219,6 +239,11 @@ class WeatherIndexCard extends HTMLElement {
         "sensor.home_flu_forecast_5",
       ],
       "Migraine Headache Forecast": [
+        "sensor.home_migraine_headache_forecast_10",
+        "sensor.home_migraine_headache_forecast_9",
+        "sensor.home_migraine_headache_forecast_8",
+        "sensor.home_migraine_headache_forecast_7",
+        "sensor.home_migraine_headache_forecast_6",
         "sensor.home_migraine_headache_forecast",
         "sensor.home_migraine_headache_forecast_2",
         "sensor.home_migraine_headache_forecast_3",
@@ -226,6 +251,11 @@ class WeatherIndexCard extends HTMLElement {
         "sensor.home_migraine_headache_forecast_5",
       ],
       "Healthy Heart Fitness Forecast": [
+        "sensor.home_healthy_heart_fitness_forecast_10",
+        "sensor.home_healthy_heart_fitness_forecast_9",
+        "sensor.home_healthy_heart_fitness_forecast_8",
+        "sensor.home_healthy_heart_fitness_forecast_7",
+        "sensor.home_healthy_heart_fitness_forecast_6",
         "sensor.home_healthy_heart_fitness_forecast",
         "sensor.home_healthy_heart_fitness_forecast_2",
         "sensor.home_healthy_heart_fitness_forecast_3",
@@ -233,6 +263,11 @@ class WeatherIndexCard extends HTMLElement {
         "sensor.home_healthy_heart_fitness_forecast_5",
       ],
       "Dust and Dander Forecast": [
+        "sensor.home_dust_dander_forecast_10",
+        "sensor.home_dust_dander_forecast_9",
+        "sensor.home_dust_dander_forecast_8",
+        "sensor.home_dust_dander_forecast_7",
+        "sensor.home_dust_dander_forecast_6",
         "sensor.home_dust_dander_forecast",
         "sensor.home_dust_dander_forecast_2",
         "sensor.home_dust_dander_forecast_3",
@@ -253,7 +288,7 @@ class WeatherIndexCard extends HTMLElement {
         numericValue: numericValue,
         icon: icon || "mdi:weather-cloudy",
         color: getColorBySeverity(numericValue),
-        borderColor: borderColor, // Use dataset color
+        borderColor: borderColor,
       };
     });
 
@@ -267,23 +302,23 @@ class WeatherIndexCard extends HTMLElement {
         });
         return acc;
       },
-      {},
+      {}
     );
 
     const generateDateLabels = (numDays) => {
       const today = new Date();
       const labels = [];
-      for (let i = 0; i < numDays; i++) {
+      for (let i = -5; i < 5; i++) {
         const date = new Date(today);
         date.setDate(today.getDate() + i);
         labels.push(
-          date.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+          date.toLocaleDateString("en-US", { month: "short", day: "numeric" })
         );
       }
       return labels;
     };
 
-    const date_labels = generateDateLabels(5);
+    const date_labels = generateDateLabels(10);
 
     this.innerHTML = `
       <style>
@@ -306,7 +341,7 @@ class WeatherIndexCard extends HTMLElement {
 
     .location {
       font-size: 16px;
-      margin-bottom: 4px;
+      margin-bottom: 2px;
     }
 
     .date {
@@ -333,6 +368,21 @@ class WeatherIndexCard extends HTMLElement {
     margin-bottom: 16px;
   }
 
+  .empty-box {
+      height: 100px; /* Adjust the height as needed */
+      width: 90%; /* Adjust the width as needed */
+      margin: 10px auto; /* Center the box */
+      background-color: rgba(200, 200, 200, 0.5); /* Light gray background */
+      border-radius: 10px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: bold;
+      color: rgba(0, 0, 0, 0.6); /* Dark gray text color */
+    }
+
   .today-icon-box {
     padding: 20px;
     text-align: center;
@@ -351,8 +401,8 @@ class WeatherIndexCard extends HTMLElement {
   .icon {
     margin: 0 auto;
     font-size: 38px;
-    width: 40px;
-    height: 40px;
+    width: 50px;
+    height: 50px;
     background: rgba(255, 255, 255, 0.3);
     border-radius: 50%;
     display: flex;
@@ -369,10 +419,14 @@ class WeatherIndexCard extends HTMLElement {
   }
 
   .today-label {
-    font-size: 14px;
-    font-weight: 300;
-    margin-top: 2px;
-    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+ font-size: 14px;
+  font-weight: 500;
+  margin-top: 4px;
+  color: rgba(255, 255, 255, 0.9);
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.3);
+  padding: 2px 6px;
+  border-radius: 4px;
   }
 
         .forecast-chart {
@@ -385,6 +439,7 @@ class WeatherIndexCard extends HTMLElement {
         <div class="location">${locationCity}, ${locationCountry}</div>
         <div class="date">${formattedDate}</div>
       </div>
+
       <div class="weather-index-card">
         ${todayIndices
           .map(
@@ -398,7 +453,7 @@ class WeatherIndexCard extends HTMLElement {
             <div class="today-name">${index.name}</div>
             <div class="today-label">${index.value}</div>
           </div>
-        `,
+        `
           )
           .join("")}
       </div>
@@ -478,10 +533,10 @@ class WeatherIndexCard extends HTMLElement {
                 usePointStyle: true,
                 pointStyle: "circle",
                 position: "bottom",
-                color: "white", // Label color
+                color: "white",
                 font: {
-                  size: 14, // Font size
-                  weight: "bold", // Font weight
+                  size: 14,
+                  weight: "bold",
                 },
               },
             },
@@ -493,6 +548,18 @@ class WeatherIndexCard extends HTMLElement {
               title: {
                 display: true,
                 text: "Days",
+                color: "white",
+                font: {
+                  size: 16,
+                  weight: "bold",
+                },
+              },
+              ticks: {
+                color: "white",
+                font: {
+                  size: 14,
+                  weight: "bold",
+                },
               },
             },
             y: {
@@ -501,9 +568,19 @@ class WeatherIndexCard extends HTMLElement {
               title: {
                 display: true,
                 text: "Risk Level",
+                color: "white",
+                font: {
+                  size: 16,
+                  weight: "bold",
+                },
               },
               ticks: {
                 stepSize: 1,
+                color: "white",
+                font: {
+                  size: 14,
+                  weight: "bold",
+                },
               },
             },
           },
