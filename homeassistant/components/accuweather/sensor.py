@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import timedelta, datetime
+from datetime import datetime
 import logging
 
 _LOGGER = logging.getLogger(__name__)
@@ -43,8 +43,6 @@ from .const import (
     ATTR_VALUE,
     ATTRIBUTION,
     MAX_FORECAST_DAYS,
-    MAX_INDEX_DAYS,
-    MAX_FORECAST_DAYS_INDEX,
 )
 from .coordinator import (
     AccuWeatherDailyForecastDataUpdateCoordinator,
@@ -694,9 +692,7 @@ class AccuWeatherIndexSensor(
         super().__init__(coordinator)
 
         self.entity_description = description
-        self.forecast_day = (
-            forecast_day
-        )
+        self.forecast_day = forecast_day
         self._sensor_data = self._get_sensor_data(
             coordinator.data, description.key, forecast_day
         )

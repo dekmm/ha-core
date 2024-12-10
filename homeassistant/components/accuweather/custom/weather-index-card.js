@@ -302,7 +302,7 @@ class WeatherIndexCard extends HTMLElement {
         });
         return acc;
       },
-      {}
+      {},
     );
 
     const generateDateLabels = (numDays) => {
@@ -312,7 +312,7 @@ class WeatherIndexCard extends HTMLElement {
         const date = new Date(today);
         date.setDate(today.getDate() + i);
         labels.push(
-          date.toLocaleDateString("en-US", { month: "short", day: "numeric" })
+          date.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
         );
       }
       return labels;
@@ -453,7 +453,7 @@ class WeatherIndexCard extends HTMLElement {
             <div class="today-name">${index.name}</div>
             <div class="today-label">${index.value}</div>
           </div>
-        `
+        `,
           )
           .join("")}
       </div>

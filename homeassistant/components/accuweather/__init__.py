@@ -5,13 +5,6 @@ from __future__ import annotations
 from dataclasses import dataclass
 import logging
 
-from homeassistant.components.sensor import DOMAIN as SENSOR_PLATFORM
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_API_KEY, CONF_NAME, Platform
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
-
 from homeassistant.components.accuweather.api import (
     AccuWeatherExt,
     IndexGroup,
@@ -30,6 +23,12 @@ from homeassistant.components.accuweather.coordinator import (
     AccuWeatherObservationDataUpdateCoordinator,
 )
 from homeassistant.components.accuweather.db import AccuWeatherIndexGroupDataStore
+from homeassistant.components.sensor import DOMAIN as SENSOR_PLATFORM
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_API_KEY, CONF_NAME, Platform
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 _LOGGER = logging.getLogger(__name__)
 
