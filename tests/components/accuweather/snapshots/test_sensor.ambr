@@ -2021,6 +2021,102 @@
     'state': '67',
   })
 # ---
+# name: test_sensor[sensor.home_location_city-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.home_location_city',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Location City',
+    'platform': 'accuweather',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '0123456-city',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[sensor.home_location_city-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by AccuWeather',
+      'device_class': 'enum',
+      'friendly_name': 'Home Location City',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.home_location_city',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '<coroutine object AsyncMockMixin._execute_mock_call at 0x7f70b0baf540>',
+  })
+# ---
+# name: test_sensor[sensor.home_location_country-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.home_location_country',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Location Country',
+    'platform': 'accuweather',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '0123456-country',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[sensor.home_location_country-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by AccuWeather',
+      'device_class': 'enum',
+      'friendly_name': 'Home Location Country',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.home_location_country',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '<coroutine object AsyncMockMixin._execute_mock_call at 0x7f70aad62940>',
+  })
+# ---
 # name: test_sensor[sensor.home_mold_pollen_day_0-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
