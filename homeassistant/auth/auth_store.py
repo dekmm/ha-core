@@ -6,7 +6,7 @@ from datetime import timedelta
 import hmac
 import itertools
 from logging import getLogger
-from typing import Any, Optional
+from typing import Any
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -58,7 +58,7 @@ class AuthStore:
         self._loaded = False
         self._users: dict[str, models.User] = None  # type: ignore[assignment]
         self._groups: dict[str, models.Group] = None  # type: ignore[assignment]
-        self._perm_lookup: Optional[PermissionLookup] = None
+        self._perm_lookup: PermissionLookup | None = None
         self._store = Store[dict[str, list[dict[str, Any]]]](
             hass, STORAGE_VERSION, STORAGE_KEY, private=True, atomic_writes=True
         )
@@ -308,7 +308,9 @@ class AuthStore:
         credentials.data = data
         self._async_schedule_save()
 
-    def _create_auth_groups(self, data) -> tuple[dict[str, models.Group], bool, bool, bool, str | None]:
+    def _create_auth_groups(
+        self, data
+    ) -> tuple[dict[str, models.Group], bool, bool, bool, str | None]:
         groups: dict[str, models.Group] = {}
 
         has_admin_group = False
@@ -358,13 +360,22 @@ class AuthStore:
                 system_generated=system_generated,
             )
 
-        return (groups,
-                has_admin_group,
-                has_user_group,
-                has_read_only_group,
-                group_without_policy)
+        return (
+            groups,
+            has_admin_group,
+            has_user_group,
+            has_read_only_group,
+            group_without_policy,
+        )
 
-    def _create_users(self, data, perm_lookup, groups, group_without_policy, migrate_users_to_admin_group) -> dict[str, models.User]:
+    def _create_users(
+        self,
+        data,
+        perm_lookup,
+        groups,
+        group_without_policy,
+        migrate_users_to_admin_group,
+    ) -> dict[str, models.User]:
         users: dict[str, models.User] = {}
 
         for user_dict in data["users"]:
@@ -479,11 +490,13 @@ class AuthStore:
         # prevents crashing if user rolls back HA version after a new property
         # was added.
 
-        (groups,
-         has_admin_group,
-         has_user_group,
-         has_read_only_group,
-         group_without_policy) = self._create_auth_groups(data)
+        (
+            groups,
+            has_admin_group,
+            has_user_group,
+            has_read_only_group,
+            group_without_policy,
+        ) = self._create_auth_groups(data)
 
         # If there are no groups, add all existing users to the admin group.
         # This is part of migrating from state 2
@@ -510,7 +523,13 @@ class AuthStore:
             user_group = _system_user_group()
             groups[user_group.id] = user_group
 
-        users = self._create_users(data, perm_lookup, groups, group_without_policy, migrate_users_to_admin_group)
+        users = self._create_users(
+            data,
+            perm_lookup,
+            groups,
+            group_without_policy,
+            migrate_users_to_admin_group,
+        )
 
         for cred_dict in data["credentials"]:
             credential = models.Credentials(

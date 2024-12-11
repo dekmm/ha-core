@@ -17,10 +17,11 @@ from homeassistant.components.assist_pipeline import (
     PipelineEvent,
     PipelineEventType,
     PipelineStage,
+    StageSettings,
     async_get_pipeline,
     async_get_pipelines,
     async_pipeline_from_audio_stream,
-    vad, StageSettings,
+    vad,
 )
 from homeassistant.components.media_player import async_process_play_media_url
 from homeassistant.components.tts import (

@@ -23,8 +23,10 @@ from homeassistant.core import (
     callback,
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.significant_change import create_checker, \
-    SignificantlyChangedChecker
+from homeassistant.helpers.significant_change import (
+    SignificantlyChangedChecker,
+    create_checker,
+)
 import homeassistant.util.dt as dt_util
 from homeassistant.util.json import JsonObjectType, json_loads_object
 
@@ -248,17 +250,18 @@ class AlexaResponse:
 
 
 def _is_domain_on(old_state, new_state) -> bool:
-    return (new_state.domain == event.DOMAIN
-            or new_state.state == STATE_ON
-            and (old_state is None or old_state.state != STATE_ON)
-            )
+    return (
+        new_state.domain == event.DOMAIN
+        or new_state.state == STATE_ON
+        and (old_state is None or old_state.state != STATE_ON)
+    )
 
 
 async def _async_est(
     hass: HomeAssistant,
     smart_home_config: AbstractConfig,
     checker: SignificantlyChangedChecker,
-    event_: Event[EventStateChangedData]
+    event_: Event[EventStateChangedData],
 ) -> None:
     data = event_.data
     new_state = data["new_state"]
@@ -293,14 +296,13 @@ async def _async_est(
 
     alexa_properties = list(alexa_changed_entity.serialize_properties())
 
-    if not checker.async_is_significant_change(
-        new_state, extra_arg=alexa_properties
-    ):
+    if not checker.async_is_significant_change(new_state, extra_arg=alexa_properties):
         return
 
     await async_send_changereport_message(
         hass, smart_home_config, alexa_changed_entity, alexa_properties
     )
+
 
 async def async_enable_proactive_mode(
     hass: HomeAssistant, smart_home_config: AbstractConfig

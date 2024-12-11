@@ -80,6 +80,7 @@ from .errors import (
     AlexaVideoActionNotPermittedForContentError,
 )
 from .state_report import AlexaDirective, AlexaResponse, async_enable_proactive_mode
+
 _ALEXA_SECURITY_PANEL_CONTROLLER_NAMESPACE = "Alexa.securityPanelController"
 _ALEXA_THERMOSTAT_CONTROLLER_NAMESPACE = "Alexa.ThermostatController"
 _LOGGER = logging.getLogger(__name__)
@@ -1098,7 +1099,9 @@ async def async_api_arm(
     payload: dict[str, Any] = {"exitDelayInSeconds": 0}
 
     response = directive.response(
-        name="Arm.Response", namespace=_ALEXA_SECURITY_PANEL_CONTROLLER_NAMESPACE, payload=payload
+        name="Arm.Response",
+        namespace=_ALEXA_SECURITY_PANEL_CONTROLLER_NAMESPACE,
+        payload=payload,
     )
 
     response.add_context_property(
@@ -1407,7 +1410,9 @@ async def async_api_toggle_off(
     return response
 
 
-def _set_cover_position(data: dict[str, Any], range_value: Any, supported: bool) -> (int, str):
+def _set_cover_position(
+    data: dict[str, Any], range_value: Any, supported: bool
+) -> (int, str):
     range_value = int(range_value)
     if supported & cover.CoverEntityFeature.CLOSE and range_value == 0:
         service = cover.SERVICE_CLOSE_COVER
@@ -1420,7 +1425,9 @@ def _set_cover_position(data: dict[str, Any], range_value: Any, supported: bool)
     return range_value, service
 
 
-def _set_cover_tilt(data: dict[str, Any], range_value: Any, supported: bool) -> (int, str):
+def _set_cover_tilt(
+    data: dict[str, Any], range_value: Any, supported: bool
+) -> (int, str):
     range_value = int(range_value)
     if supported & cover.CoverEntityFeature.CLOSE_TILT and range_value == 0:
         service = cover.SERVICE_CLOSE_COVER_TILT
@@ -1433,7 +1440,9 @@ def _set_cover_tilt(data: dict[str, Any], range_value: Any, supported: bool) -> 
     return range_value, service
 
 
-def _set_fan_speed(data: dict[str, Any], range_value: Any, supported: bool) -> (int, str):
+def _set_fan_speed(
+    data: dict[str, Any], range_value: Any, supported: bool
+) -> (int, str):
     range_value = int(range_value)
     if range_value == 0:
         service = fan.SERVICE_TURN_OFF
@@ -1446,7 +1455,9 @@ def _set_fan_speed(data: dict[str, Any], range_value: Any, supported: bool) -> (
     return range_value, service
 
 
-def _set_valve_position(data: dict[str, Any], range_value: Any, supported: bool) -> (int, str):
+def _set_valve_position(
+    data: dict[str, Any], range_value: Any, supported: bool
+) -> (int, str):
     range_value = int(range_value)
     if supported & valve.ValveEntityFeature.CLOSE and range_value == 0:
         service = valve.SERVICE_CLOSE_VALVE

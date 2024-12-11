@@ -461,10 +461,10 @@ class AuthManager:
         """Create a new refresh token for a user."""
         self._validate_user_and_client(user, client_id)
         token_type = self._determine_token_type(user, token_type)
-        
+
         expire_at = self._calculate_expiration(token_type)
         self._validate_token_type_constraints(user, token_type, client_id, client_name)
-        
+
         if token_type == models.TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN:
             self._check_existing_long_lived_token(user, client_name)
 
@@ -479,21 +479,24 @@ class AuthManager:
             credential,
         )
 
-    def _validate_user_and_client(self, user: models.User, client_id: str | None) -> None:
+    def _validate_user_and_client(
+        self, user: models.User, client_id: str | None
+    ) -> None:
         """Validate the user and client constraints."""
         if not user.is_active:
             raise ValueError("User is not active")
 
         if user.system_generated and client_id is not None:
-            raise ValueError("System generated users cannot have refresh tokens connected to a client.")
+            raise ValueError(
+                "System generated users cannot have refresh tokens connected to a client."
+            )
 
     def _determine_token_type(self, user: models.User, token_type: str | None) -> str:
         """Determine the appropriate token type."""
         if token_type is None:
             if user.system_generated:
                 return models.TOKEN_TYPE_SYSTEM
-            else:
-                return models.TOKEN_TYPE_NORMAL
+            return models.TOKEN_TYPE_NORMAL
         return token_type
 
     def _calculate_expiration(self, token_type: str) -> float | None:
@@ -511,15 +514,22 @@ class AuthManager:
     ) -> None:
         """Validate constraints based on token type."""
         if user.system_generated != (token_type == models.TOKEN_TYPE_SYSTEM):
-            raise ValueError("System generated users can only have system type refresh tokens")
+            raise ValueError(
+                "System generated users can only have system type refresh tokens"
+            )
 
         if token_type == models.TOKEN_TYPE_NORMAL and client_id is None:
             raise ValueError("Client is required to generate a refresh token.")
 
-        if token_type == models.TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN and client_name is None:
+        if (
+            token_type == models.TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN
+            and client_name is None
+        ):
             raise ValueError("Client_name is required for long-lived access token")
 
-    def _check_existing_long_lived_token(self, user: models.User, client_name: str) -> None:
+    def _check_existing_long_lived_token(
+        self, user: models.User, client_name: str
+    ) -> None:
         """Ensure that there are no duplicate long-lived access tokens for a client."""
         for token in user.refresh_tokens.values():
             if (
@@ -528,8 +538,6 @@ class AuthManager:
             ):
                 raise ValueError(f"{client_name} already exists")
 
-
-    
     @callback
     def async_get_refresh_token(self, token_id: str) -> models.RefreshToken | None:
         """Get refresh token by id."""

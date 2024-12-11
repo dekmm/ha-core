@@ -50,6 +50,7 @@ from homeassistant.util import (
 )
 from homeassistant.util.limited_size_dict import LimitedSizeDict
 
+from ..wake_word import DetectionResult
 from .audio_enhancer import AudioEnhancer, EnhancedAudioChunk, MicroVadSpeexEnhancer
 from .const import (
     BYTES_PER_CHUNK,
@@ -77,7 +78,6 @@ from .error import (
     WakeWordTimeoutError,
 )
 from .vad import AudioBuffer, VoiceActivityTimeout, VoiceCommandSegmenter, chunk_samples
-from ..wake_word import DetectionResult
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -118,8 +118,6 @@ STORED_PIPELINE_RUNS = 10
 SAVE_DELAY = 10
 
 
-
-
 @callback
 def _async_resolve_default_pipeline_settings(
     hass: HomeAssistant,
@@ -133,14 +131,16 @@ def _async_resolve_default_pipeline_settings(
     # Set default values upfront
     pipeline_language = hass.config.language or "en"
 
-    conversation_engine_id = (
-        conversation_engine_id or conversation.HOME_ASSISTANT_AGENT
-    )
+    conversation_engine_id = conversation_engine_id or conversation.HOME_ASSISTANT_AGENT
     conversation_language = _resolve_conversation_language(hass, conversation_engine_id)
 
-    stt_engine_id, stt_language = _resolve_stt_settings(hass, stt_engine_id, pipeline_language)
+    stt_engine_id, stt_language = _resolve_stt_settings(
+        hass, stt_engine_id, pipeline_language
+    )
 
-    tts_engine_id, tts_language, tts_voice = _resolve_tts_settings(hass, tts_engine_id, pipeline_language)
+    tts_engine_id, tts_language, tts_voice = _resolve_tts_settings(
+        hass, tts_engine_id, pipeline_language
+    )
 
     return {
         "conversation_engine": conversation_engine_id,
@@ -153,10 +153,12 @@ def _async_resolve_default_pipeline_settings(
         "tts_language": tts_language,
         "tts_voice": tts_voice,
         "wake_word_entity": None,  # Default value kept intact
-        "wake_word_id": None,      # Default value kept intact
+        "wake_word_id": None,  # Default value kept intact
     }
 
-        #Resolve the conversation language based on the engine.
+    # Resolve the conversation language based on the engine.
+
+
 def _resolve_conversation_language(hass: HomeAssistant, engine_id: str) -> str:
     conversation_languages = language_util.matches(
         hass.config.language,
@@ -165,8 +167,9 @@ def _resolve_conversation_language(hass: HomeAssistant, engine_id: str) -> str:
     )
     return conversation_languages[0] if conversation_languages else "en"
 
+    # Resolve STT engine and language settings.
 
-      # Resolve STT engine and language settings.
+
 def _resolve_stt_settings(
     hass: HomeAssistant, stt_engine_id: str | None, pipeline_language: str
 ) -> tuple[str | None, str | None]:
@@ -185,14 +188,16 @@ def _resolve_stt_settings(
     if not stt_languages:
         _LOGGER.debug(
             "Speech-to-text engine '%s' does not support language '%s'",
-            stt_engine_id, pipeline_language,
+            stt_engine_id,
+            pipeline_language,
         )
         return None, None
 
     return stt_engine_id, stt_languages[0]
 
+    # Resolve TTS engine, language, and voice settings.
 
-         # Resolve TTS engine, language, and voice settings.
+
 def _resolve_tts_settings(
     hass: HomeAssistant, tts_engine_id: str | None, pipeline_language: str
 ) -> tuple[str | None, str | None, str | None]:
@@ -211,19 +216,19 @@ def _resolve_tts_settings(
     if not tts_languages:
         _LOGGER.debug(
             "Text-to-speech engine '%s' does not support language '%s'",
-            tts_engine_id, pipeline_language,
+            tts_engine_id,
+            pipeline_language,
         )
         return None, None, None
 
     tts_language = tts_languages[0]
-    tts_voice = tts_engine.async_get_supported_voices(tts_language)[0].voice_id \
-        if tts_engine.async_get_supported_voices(tts_language) else None
+    tts_voice = (
+        tts_engine.async_get_supported_voices(tts_language)[0].voice_id
+        if tts_engine.async_get_supported_voices(tts_language)
+        else None
+    )
 
     return tts_engine_id, tts_language, tts_voice
-
-
-
-
 
 
 async def _async_create_default_pipeline(
@@ -769,23 +774,28 @@ class PipelineRun:
         return result
 
     def _process_wake_word_result(
-        self,
-        result: DetectionResult,
-        audio_chunks_for_stt: list[EnhancedAudioChunk]
+        self, result: DetectionResult, audio_chunks_for_stt: list[EnhancedAudioChunk]
     ):
         if result is None:
             return {}
 
         last_wake_up = self.hass.data[DATA_LAST_WAKE_UP].get(result.wake_word_phrase)
-        if last_wake_up is not None and (time.monotonic() - last_wake_up) < WAKE_WORD_COOLDOWN:
-            _LOGGER.debug("Duplicate wake word detection occurred for %s", result.wake_word_phrase)
+        if (
+            last_wake_up is not None
+            and (time.monotonic() - last_wake_up) < WAKE_WORD_COOLDOWN
+        ):
+            _LOGGER.debug(
+                "Duplicate wake word detection occurred for %s", result.wake_word_phrase
+            )
             raise DuplicateWakeUpDetectedError(result.wake_word_phrase)
 
         self.hass.data[DATA_LAST_WAKE_UP][result.wake_word_phrase] = time.monotonic()
 
         if result.queued_audio:
             audio_chunks_for_stt.extend(
-                EnhancedAudioChunk(audio=chunk_ts[0], timestamp_ms=chunk_ts[1], is_speech=False)
+                EnhancedAudioChunk(
+                    audio=chunk_ts[0], timestamp_ms=chunk_ts[1], is_speech=False
+                )
                 for chunk_ts in result.queued_audio
             )
 
@@ -1297,8 +1307,9 @@ def _pipeline_debug_recording_thread_proc(
             wav_writer.close()
 
 
-async def buffer_then_audio_stream(stt_audio_buffer, stt_processed_stream
-                                   ) -> AsyncGenerator[EnhancedAudioChunk]:
+async def buffer_then_audio_stream(
+    stt_audio_buffer, stt_processed_stream
+) -> AsyncGenerator[EnhancedAudioChunk]:
     # Send audio in the buffer first to speech-to-text, then move on to stt_stream.
     # This is basically an async itertools.chain.
     # Buffered audio
@@ -1338,9 +1349,7 @@ class PipelineInput:
 
     def try_wake_up(self):
         # Avoid duplicate wake-ups by checking cooldown
-        last_wake_up = self.run.hass.data[DATA_LAST_WAKE_UP].get(
-            self.wake_word_phrase
-        )
+        last_wake_up = self.run.hass.data[DATA_LAST_WAKE_UP].get(self.wake_word_phrase)
         if last_wake_up is not None:
             sec_since_last_wake_up = time.monotonic() - last_wake_up
             if sec_since_last_wake_up < WAKE_WORD_COOLDOWN:
@@ -1351,9 +1360,8 @@ class PipelineInput:
                 raise DuplicateWakeUpDetectedError(self.wake_word_phrase)
 
         # Record last wake up time to block duplicate detections
-        self.run.hass.data[DATA_LAST_WAKE_UP][self.wake_word_phrase] = (
-            time.monotonic()
-        )
+        self.run.hass.data[DATA_LAST_WAKE_UP][self.wake_word_phrase] = time.monotonic()
+
     async def handle_intent_and_tts(self, current_stage, intent_input):
         if self.run.end_stage != PipelineStage.STT:
             tts_input = self.tts_input
@@ -1430,7 +1438,7 @@ class PipelineInput:
                 current_stage = PipelineStage.INTENT
 
             # Handle voice intent and TTS
-            await self.handle_intent_and_tts(current_stage,intent_input)
+            await self.handle_intent_and_tts(current_stage, intent_input)
 
         except PipelineError as err:
             self.run.process_event(

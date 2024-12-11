@@ -11,6 +11,7 @@ import voluptuous as vol
 from homeassistant.components import stt
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers.typing import ConfigType
+
 from .const import (
     CONF_DEBUG_RECORDING_DIR,
     DATA_CONFIG,

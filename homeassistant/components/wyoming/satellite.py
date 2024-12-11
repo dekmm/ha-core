@@ -24,8 +24,10 @@ from wyoming.vad import VoiceStarted, VoiceStopped
 from wyoming.wake import Detect, Detection
 
 from homeassistant.components import assist_pipeline, intent, stt, tts
-from homeassistant.components.assist_pipeline import select as pipeline_select, \
-    StageSettings
+from homeassistant.components.assist_pipeline import (
+    StageSettings,
+    select as pipeline_select,
+)
 from homeassistant.components.assist_pipeline.vad import VadSensitivity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import Context, HomeAssistant, callback

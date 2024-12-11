@@ -1438,7 +1438,7 @@ class AlexaModeController(AlexaCapability):
         if self.instance == f"{humidifier.DOMAIN}.{humidifier.ATTR_MODE}":
             mode = self.entity.attributes.get(humidifier.ATTR_MODE)
             modes: list[str] = (
-                    self.entity.attributes.get(humidifier.ATTR_AVAILABLE_MODES) or []
+                self.entity.attributes.get(humidifier.ATTR_AVAILABLE_MODES) or []
             )
             if mode in modes:
                 return f"{humidifier.ATTR_MODE}.{mode}"
@@ -1455,9 +1455,11 @@ class AlexaModeController(AlexaCapability):
     def get_water_heater_operation_mode(self) -> Any:
         # Water heater operation mode
         if self.instance == f"{water_heater.DOMAIN}.{water_heater.ATTR_OPERATION_MODE}":
-            operation_mode = self.entity.attributes.get(water_heater.ATTR_OPERATION_MODE)
+            operation_mode = self.entity.attributes.get(
+                water_heater.ATTR_OPERATION_MODE
+            )
             operation_modes: list[str] = (
-                    self.entity.attributes.get(water_heater.ATTR_OPERATION_LIST) or []
+                self.entity.attributes.get(water_heater.ATTR_OPERATION_LIST) or []
             )
             if operation_mode in operation_modes:
                 return f"{water_heater.ATTR_OPERATION_MODE}.{operation_mode}"
@@ -1469,11 +1471,11 @@ class AlexaModeController(AlexaCapability):
             # Return state instead of position when using ModeController.
             mode = self.entity.state
             if mode in (
-                    cover.STATE_OPEN,
-                    cover.STATE_OPENING,
-                    cover.STATE_CLOSED,
-                    cover.STATE_CLOSING,
-                    STATE_UNKNOWN,
+                cover.STATE_OPEN,
+                cover.STATE_OPENING,
+                cover.STATE_CLOSED,
+                cover.STATE_CLOSING,
+                STATE_UNKNOWN,
             ):
                 return f"{cover.ATTR_POSITION}.{mode}"
         return None
@@ -1484,11 +1486,11 @@ class AlexaModeController(AlexaCapability):
             # Return state instead of position when using ModeController.
             state = self.entity.state
             if state in (
-                    valve.STATE_OPEN,
-                    valve.STATE_OPENING,
-                    valve.STATE_CLOSED,
-                    valve.STATE_CLOSING,
-                    STATE_UNKNOWN,
+                valve.STATE_OPEN,
+                valve.STATE_OPENING,
+                valve.STATE_CLOSED,
+                valve.STATE_CLOSING,
+                STATE_UNKNOWN,
             ):
                 return f"state.{state}"
         return None
@@ -1500,18 +1502,17 @@ class AlexaModeController(AlexaCapability):
 
         if fan_direction := self.get_fan_direction():
             return fan_direction
-        elif fan_preset_mode := self.get_fan_preset_mode():
+        if fan_preset_mode := self.get_fan_preset_mode():
             return fan_preset_mode
-        elif humidifier_mode := self.get_humidifier_mode():
+        if humidifier_mode := self.get_humidifier_mode():
             return humidifier_mode
-        elif remote_activity := self.get_remote_activity():
+        if remote_activity := self.get_remote_activity():
             return remote_activity
-        elif water_heater_operation_mode := self.get_water_heater_operation_mode():
+        if water_heater_operation_mode := self.get_water_heater_operation_mode():
             return water_heater_operation_mode
-        elif cover_position := self.get_cover_position():
+        if cover_position := self.get_cover_position():
             return cover_position
-        else:
-            return self.get_valve_position_state()
+        return self.get_valve_position_state()
 
     def configuration(self) -> dict[str, Any] | None:
         """Return configuration with modeResources."""
@@ -1650,24 +1651,22 @@ class AlexaModeController(AlexaCapability):
         if self.instance == f"{fan.DOMAIN}.{fan.ATTR_DIRECTION}":
             return self.get_fan_direction_capability_resource()
         # Fan preset_mode
-        elif self.instance == f"{fan.DOMAIN}.{fan.ATTR_PRESET_MODE}":
+        if self.instance == f"{fan.DOMAIN}.{fan.ATTR_PRESET_MODE}":
             return self.get_fan_preset_mode_capability_resource()
         # Humidifier modes
-        elif self.instance == f"{humidifier.DOMAIN}.{humidifier.ATTR_MODE}":
+        if self.instance == f"{humidifier.DOMAIN}.{humidifier.ATTR_MODE}":
             return self.get_humidifier_modes_capability_resource()
         # Water heater operation modes
-        elif (
-            self.instance == f"{water_heater.DOMAIN}.{water_heater.ATTR_OPERATION_MODE}"
-        ):
+        if self.instance == f"{water_heater.DOMAIN}.{water_heater.ATTR_OPERATION_MODE}":
             return self.get_water_heater_operation_modes_capability_resource()
         # Remote Resource
-        elif self.instance == f"{remote.DOMAIN}.{remote.ATTR_ACTIVITY}":
+        if self.instance == f"{remote.DOMAIN}.{remote.ATTR_ACTIVITY}":
             return self.get_remote_capability_resource()
         # Cover Position Resources
-        elif self.instance == f"{cover.DOMAIN}.{cover.ATTR_POSITION}":
+        if self.instance == f"{cover.DOMAIN}.{cover.ATTR_POSITION}":
             return self.get_cover_position_capability_resource()
         # Valve position resources
-        elif self.instance == f"{valve.DOMAIN}.state":
+        if self.instance == f"{valve.DOMAIN}.state":
             return self.get_valve_position_capability_resource()
 
         return {}

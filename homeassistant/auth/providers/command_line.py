@@ -63,11 +63,6 @@ class CommandLineAuthProvider(AuthProvider):
         """Return a flow to login."""
         return CommandLineLoginFlow(self)
 
-
-
-
-
-
     async def async_validate_login(self, username: str, password: str) -> None:
         """Validate a username and password."""
         env = {"username": username, "password": password}
@@ -78,10 +73,9 @@ class CommandLineAuthProvider(AuthProvider):
             meta = self._parse_meta_data(stdout)
             self._user_meta[username] = meta
 
-
             # Start authentecation subprocess
-    async def start_auth_process(self, env: dict[str, str]):
 
+    async def start_auth_process(self, env: dict[str, str]):
         try:
             process = await asyncio.create_subprocess_exec(
                 self.config[CONF_COMMAND],
@@ -91,15 +85,14 @@ class CommandLineAuthProvider(AuthProvider):
                 close_fds=False,  # required for posix_spawn
             )
             return process
-        
 
         except OSError as err:
             # happens when command doesn't exist or permission is denied
-            _LOGGER.error("Error while authenticating %r: %s", env['username'], err)
+            _LOGGER.error("Error while authenticating %r: %s", env["username"], err)
             raise InvalidAuthError from err
 
+            # handle process out put and validate the result.
 
-            #handle process out put and validate the result.
     async def handle_process_output(self, username: str, process):
         stdout, _ = await process.communicate()
 
@@ -111,11 +104,11 @@ class CommandLineAuthProvider(AuthProvider):
             )
             raise InvalidAuthError
         return stdout
-    
-            #Parse the meta data from process output.
-    def parse_meta_data(self, stdout: bytes) -> dict [str,str]:
 
-        meta ={}
+        # Parse the meta data from process output.
+
+    def parse_meta_data(self, stdout: bytes) -> dict[str, str]:
+        meta = {}
         for _line in stdout.splitlines():
             line = self.decode_and_strip_line(_line)
             if not self.is_valid_meta_line(line):
@@ -124,28 +117,25 @@ class CommandLineAuthProvider(AuthProvider):
             if key in self.ALLOWED_META_KEYS:
                 meta[key] = value
         return meta
-    
 
-            # Decode and strip a line from stdout.
+        # Decode and strip a line from stdout.
+
     def decode_and_strip_line(self, _line: bytes) -> str:
         try:
             return _line.decode().lstrip()
         except ValueError:
-            return ''  # return and empty string for invalid line.
-        
+            return ""  # return and empty string for invalid line.
+
             # Check if the line is a valid meta line.
+
     def is_valid_meta_line(self, line: str) -> bool:
         return bool(line and not line.startswith("#") and "=" in line)
-    
-            # Extract key and value from a valid meta line.
+
+        # Extract key and value from a valid meta line.
+
     def extract_key_value(self, line: str) -> tuple[str, str]:
         key, _, value = line.partition("=")
         return key.strip(), value.strip()
-
-
-
-
-
 
     async def async_get_or_create_credentials(
         self, flow_result: Mapping[str, str]
