@@ -391,20 +391,20 @@ class WeatherIndexCard extends HTMLElement {
   }
 
 .text-box {
-  padding: 15px; /* Add space inside the box */
-  margin: 0px auto; /* Center the box */
-  width: 90%; /* Adjust the width */
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.2), rgba(200, 200, 200, 0.5)); /* Subtle gradient */
-  border-radius: 10px; /* Rounded corners */
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); /* Drop shadow for depth */
-  font-size: 14px; /* Adjust font size for readability */
-  font-weight: 400; /* Medium font weight */
-  color: white; /* White text color */
-  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5); /* Text shadow for clarity */
-  line-height: 1.5; /* Line spacing for readability */
-  text-align: left; /* Align text to the left */
-  overflow: hidden; /* Handle text overflow */
-  animation: fadeIn 1s ease-in-out; /* Fade-in animation */
+  padding: 15px;
+  margin: 0px auto;
+  width: 90%;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.2), rgba(200, 200, 200, 0.5));
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  font-size: 14px;
+  font-weight: 400;
+  color: white;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+  line-height: 1.5;
+  text-align: left;
+  overflow: hidden;
+  animation: fadeIn 1s ease-in-out;
 }
 
 
