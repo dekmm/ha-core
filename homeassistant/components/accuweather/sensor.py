@@ -69,6 +69,13 @@ INDEX_SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
         value_fn=lambda data: cast(
             str, data[ATTR_CATEGORY]
         ),  # If we want to display value e.g. 5.8, or the category value e.g. Good
+        options=[
+            "Excellent",
+            "Very Good",
+            "Good",
+            "Fair",
+            "Poor",
+        ],
         attr_fn=lambda data: {
             "Value": data.get("Value"),
             "Category": data.get("Category"),
@@ -83,6 +90,7 @@ INDEX_SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
         key="Dust & Dander Forecast",
         entity_registry_enabled_default=True,
         value_fn=lambda data: cast(str, data[ATTR_CATEGORY]),
+        options=["Extreme", "Very High", "High", "Moderate", "Low"],
         attr_fn=lambda data: {
             "Value": data.get("Value"),
             "Category": data.get("Category"),
@@ -97,6 +105,7 @@ INDEX_SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
         key="Arthritis Pain Forecast",
         entity_registry_enabled_default=True,
         value_fn=lambda data: cast(str, data[ATTR_CATEGORY]),
+        options=["At Extreme Risk", "At High Risk", "At Risk", "Neutral", "Beneficial"],
         attr_fn=lambda data: {
             "Value": data.get("Value"),
             "Category": data.get("Category"),
@@ -111,6 +120,7 @@ INDEX_SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
         key="Asthma Forecast",
         entity_registry_enabled_default=True,
         value_fn=lambda data: cast(str, data[ATTR_CATEGORY]),
+        options=["At Extreme Risk", "At High Risk", "At Risk", "Neutral", "Beneficial"],
         attr_fn=lambda data: {
             "Value": data.get("Value"),
             "Category": data.get("Category"),
@@ -125,6 +135,7 @@ INDEX_SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
         key="Common Cold Forecast",
         entity_registry_enabled_default=True,
         value_fn=lambda data: cast(str, data[ATTR_CATEGORY]),
+        options=["At Extreme Risk", "At High Risk", "At Risk", "Neutral", "Beneficial"],
         attr_fn=lambda data: {
             "Value": data.get("Value"),
             "Category": data.get("Category"),
@@ -139,6 +150,7 @@ INDEX_SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
         key="Flu Forecast",
         entity_registry_enabled_default=True,
         value_fn=lambda data: cast(str, data[ATTR_CATEGORY]),
+        options=["At Extreme Risk", "At High Risk", "At Risk", "Neutral", "Beneficial"],
         attr_fn=lambda data: {
             "Value": data.get("Value"),
             "Category": data.get("Category"),
@@ -153,6 +165,7 @@ INDEX_SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
         key="Migraine Headache Forecast",
         entity_registry_enabled_default=True,
         value_fn=lambda data: cast(str, data[ATTR_CATEGORY]),
+        options=["At Extreme Risk", "At High Risk", "At Risk", "Neutral", "Beneficial"],
         attr_fn=lambda data: {
             "Value": data.get("Value"),
             "Category": data.get("Category"),
