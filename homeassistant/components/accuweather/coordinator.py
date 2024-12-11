@@ -17,6 +17,7 @@ from homeassistant.helpers.update_coordinator import (
     UpdateFailed,
 )
 
+from . import notification
 from .api import AccuWeatherExt, IndexGroup, IndexRange
 from .const import DOMAIN, MANUFACTURER
 from .db import AccuWeatherIndexGroupDataStore
@@ -147,7 +148,6 @@ class AccuWeatherIndexGroupDataUpdateCoordinator(
             _LOGGER.debug("Merged data: %s", merged_data)
 
             return merged_data
-
         except EXCEPTIONS as error:
             _LOGGER.error("Error fetching data: %s", error)
             raise UpdateFailed(error) from error
