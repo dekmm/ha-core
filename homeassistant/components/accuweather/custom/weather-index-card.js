@@ -350,7 +350,7 @@ class WeatherIndexCard extends HTMLElement {
       align-items: center;
       justify-content: center;
       padding: 10px;
-      margin: 40px 0 10px 0; /* Add top margin */
+      margin: 0 0 10px 0; /* Add top margin */
       border-radius: 10px;
       box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
       background: linear-gradient(135deg, rgba(135, 206, 235, 0.9), rgba(255, 182, 193, 0.8));
@@ -487,7 +487,7 @@ class WeatherIndexCard extends HTMLElement {
 
         .forecast-chart {
           width: 100%;
-          height: 200px;
+          height: 800px;
           margin-top: 20px;
         }
       </style>
@@ -645,7 +645,7 @@ class WeatherIndexCard extends HTMLElement {
             },
           },
           responsive: true,
-          maintainAspectRatio: false,
+          maintainAspectRatio: true,
           scales: {
             x: {
               title: {
