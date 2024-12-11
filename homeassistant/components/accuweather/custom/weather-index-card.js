@@ -324,7 +324,7 @@ class WeatherIndexCard extends HTMLElement {
         });
         return acc;
       },
-      {}
+      {},
     );
 
     const generateDateLabels = (numDays) => {
@@ -334,7 +334,7 @@ class WeatherIndexCard extends HTMLElement {
         const date = new Date(today);
         date.setDate(today.getDate() + i);
         labels.push(
-          date.toLocaleDateString("en-US", { month: "short", day: "numeric" })
+          date.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
         );
       }
       return labels;
@@ -512,7 +512,7 @@ class WeatherIndexCard extends HTMLElement {
               <div class="today-label">${index.newValue}</div>
 
             </div>
-        `
+        `,
           )
           .join("")}
       </div>
@@ -525,8 +525,49 @@ class WeatherIndexCard extends HTMLElement {
     // Render the chart after the DOM is updated
     setTimeout(() => {
       const ctx = this.querySelector("#forecastChart").getContext("2d");
+      const verticalLinePlugin = {
+        getLinePosition: function (chart, pointIndex) {
+          const meta = chart.getDatasetMeta(0);
+          const data = meta.data;
+          return data[pointIndex].x;
+        },
+
+        renderVerticalLine: function (chartInstance, pointIndex) {
+          const linePosition = this.getLinePosition(chartInstance, pointIndex);
+          const nextPointOffset = this.getLinePosition(
+            chartInstance,
+            pointIndex + 1,
+          );
+          const scale = chartInstance.scales.y;
+          const context = chartInstance.ctx;
+
+          context.beginPath();
+          context.strokeStyle = "#fff584";
+          context.setLineDash([5, 5]);
+          context.moveTo(linePosition, scale.top);
+          context.lineTo(linePosition, scale.bottom);
+          context.stroke();
+
+          context.fillStyle = "#fff584";
+          context.textAlign = "center";
+          context.fillText(
+            "Today",
+            linePosition + (nextPointOffset - linePosition) * 0.25,
+            (scale.bottom - scale.top) * 0.1,
+          );
+        },
+
+        beforeDatasetsDraw: function (chart, easing) {
+          if (chart.config._config.lineAtIndex)
+            chart.config._config.lineAtIndex.forEach((pointIndex) =>
+              this.renderVerticalLine(chart, pointIndex),
+            );
+        },
+      };
       new Chart(ctx, {
         type: "line",
+        plugins: [verticalLinePlugin],
+        lineAtIndex: [5],
         data: {
           labels: date_labels,
           datasets: [
