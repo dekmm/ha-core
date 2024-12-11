@@ -4,6 +4,10 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import datetime
+import logging
+
+_LOGGER = logging.getLogger(__name__)
 from typing import Any, cast
 
 from homeassistant.components.sensor import (
@@ -39,7 +43,6 @@ from .const import (
     ATTR_VALUE,
     ATTRIBUTION,
     MAX_FORECAST_DAYS,
-    MAX_INDEX_DAYS,
 )
 from .coordinator import (
     AccuWeatherDailyForecastDataUpdateCoordinator,
@@ -66,62 +69,98 @@ INDEX_SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
         value_fn=lambda data: cast(
             str, data[ATTR_CATEGORY]
         ),  # If we want to display value e.g. 5.8, or the category value e.g. Good
+        attr_fn=lambda data: {
+            "Value": data.get("Value"),
+            "Category": data.get("Category"),
+            "CategoryValue": data.get("CategoryValue"),
+            "Text": data.get("Text"),
+            "LocalDateTime": data.get("LocalDateTime"),
+        },
         device_class=SensorDeviceClass.ENUM,
-        options=[
-            "Excellent",
-            "Very Good",
-            "Good",
-            "Fair",
-            "Poor",
-        ],  # The category values the sensor can obtain (found in API Index description)
         translation_key="healthy_heart_fitness_forecast",
     ),
     AccuWeatherSensorDescription(
         key="Dust & Dander Forecast",
         entity_registry_enabled_default=True,
         value_fn=lambda data: cast(str, data[ATTR_CATEGORY]),
+        attr_fn=lambda data: {
+            "Value": data.get("Value"),
+            "Category": data.get("Category"),
+            "CategoryValue": data.get("CategoryValue"),
+            "Text": data.get("Text"),
+            "LocalDateTime": data.get("LocalDateTime"),
+        },
         device_class=SensorDeviceClass.ENUM,
-        options=["Extreme", "Very High", "High", "Moderate", "Low"],
         translation_key="dust_and_dander_forecast",
     ),
     AccuWeatherSensorDescription(
         key="Arthritis Pain Forecast",
         entity_registry_enabled_default=True,
         value_fn=lambda data: cast(str, data[ATTR_CATEGORY]),
+        attr_fn=lambda data: {
+            "Value": data.get("Value"),
+            "Category": data.get("Category"),
+            "CategoryValue": data.get("CategoryValue"),
+            "Text": data.get("Text"),
+            "LocalDateTime": data.get("LocalDateTime"),
+        },
         device_class=SensorDeviceClass.ENUM,
-        options=["At Extreme Risk", "At High Risk", "At Risk", "Neutral", "Beneficial"],
         translation_key="arthritis_pain_forecast",
     ),
     AccuWeatherSensorDescription(
         key="Asthma Forecast",
         entity_registry_enabled_default=True,
         value_fn=lambda data: cast(str, data[ATTR_CATEGORY]),
+        attr_fn=lambda data: {
+            "Value": data.get("Value"),
+            "Category": data.get("Category"),
+            "CategoryValue": data.get("CategoryValue"),
+            "Text": data.get("Text"),
+            "LocalDateTime": data.get("LocalDateTime"),
+        },
         device_class=SensorDeviceClass.ENUM,
-        options=["At Extreme Risk", "At High Risk", "At Risk", "Neutral", "Beneficial"],
         translation_key="asthma_forecast",
     ),
     AccuWeatherSensorDescription(
         key="Common Cold Forecast",
         entity_registry_enabled_default=True,
         value_fn=lambda data: cast(str, data[ATTR_CATEGORY]),
+        attr_fn=lambda data: {
+            "Value": data.get("Value"),
+            "Category": data.get("Category"),
+            "CategoryValue": data.get("CategoryValue"),
+            "Text": data.get("Text"),
+            "LocalDateTime": data.get("LocalDateTime"),
+        },
         device_class=SensorDeviceClass.ENUM,
-        options=["At Extreme Risk", "At High Risk", "At Risk", "Neutral", "Beneficial"],
         translation_key="common_cold_forecast",
     ),
     AccuWeatherSensorDescription(
         key="Flu Forecast",
         entity_registry_enabled_default=True,
         value_fn=lambda data: cast(str, data[ATTR_CATEGORY]),
+        attr_fn=lambda data: {
+            "Value": data.get("Value"),
+            "Category": data.get("Category"),
+            "CategoryValue": data.get("CategoryValue"),
+            "Text": data.get("Text"),
+            "LocalDateTime": data.get("LocalDateTime"),
+        },
         device_class=SensorDeviceClass.ENUM,
-        options=["At Extreme Risk", "At High Risk", "At Risk", "Neutral", "Beneficial"],
         translation_key="flu_forecast",
     ),
     AccuWeatherSensorDescription(
         key="Migraine Headache Forecast",
         entity_registry_enabled_default=True,
         value_fn=lambda data: cast(str, data[ATTR_CATEGORY]),
+        attr_fn=lambda data: {
+            "Value": data.get("Value"),
+            "Category": data.get("Category"),
+            "CategoryValue": data.get("CategoryValue"),
+            "Text": data.get("Text"),
+            "LocalDateTime": data.get("LocalDateTime"),
+        },
         device_class=SensorDeviceClass.ENUM,
-        options=["At Extreme Risk", "At High Risk", "At Risk", "Neutral", "Beneficial"],
         translation_key="migraine_headache_forecast",
     ),
 )
@@ -502,7 +541,7 @@ async def async_setup_entry(
     sensors.extend(
         [
             AccuWeatherIndexSensor(index_group_coordinator, description, day)
-            for day in range(1, MAX_INDEX_DAYS + 1)
+            for day in range(1, len(index_group_coordinator.data) + 1)
             for description in INDEX_SENSOR_TYPES
             if description.key in index_group_coordinator.data[day - 1]
         ]
@@ -624,7 +663,7 @@ class AccuWeatherForecastSensor(
 class AccuWeatherIndexSensor(
     CoordinatorEntity[AccuWeatherIndexGroupDataUpdateCoordinator], SensorEntity
 ):
-    """Define an AccuWeather entity."""
+    """Define an AccuWeather Index entity."""
 
     _attr_attribution = ATTRIBUTION
     _attr_has_entity_name = True
@@ -640,15 +679,27 @@ class AccuWeatherIndexSensor(
         super().__init__(coordinator)
 
         self.entity_description = description
+        self.forecast_day = forecast_day
         self._sensor_data = self._get_sensor_data(
             coordinator.data, description.key, forecast_day
         )
+
         self._attr_unique_id = (
             f"{coordinator.location_key}-{description.key}-day-{forecast_day}".lower()
         )
         self._attr_device_info = coordinator.device_info
-        self._attr_translation_placeholders = {"forecast_day": str(forecast_day)}
-        self.forecast_day = forecast_day
+        self._attr_translation_placeholders = {
+            "forecast_day": str(self.relative_forecast_day)
+        }
+
+    @property
+    def relative_forecast_day(self) -> int:
+        """Calculate relative forecast day (today=0, past=-X, future=+X)."""
+        today = datetime.now().date()
+        forecast_date = datetime.strptime(
+            self._sensor_data["LocalDateTime"], "%Y-%m-%d"
+        ).date()
+        return (forecast_date - today).days
 
     @property
     def native_value(self) -> str | int | float | None:
@@ -659,7 +710,7 @@ class AccuWeatherIndexSensor(
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         attributes = self.entity_description.attr_fn(self._sensor_data)
-        attributes["forecast_day"] = self.forecast_day
+        attributes["forecast_day"] = self.relative_forecast_day
         return attributes
 
     @callback
@@ -677,7 +728,10 @@ class AccuWeatherIndexSensor(
         forecast_day: int,
     ) -> Any:
         """Get sensor data."""
-        return sensors[forecast_day - 1][kind]
+        try:
+            return sensors[forecast_day - 1][kind]
+        except (IndexError, KeyError):
+            return None
 
 
 class AccuWeatherLocationSensor(

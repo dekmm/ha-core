@@ -9,6 +9,14 @@ class WeatherIndexCard extends HTMLElement {
     }
   }
 
+  static getConfigElement() {
+    return document.createElement("hui-generic-entity-row");
+  }
+
+  static getStubConfig() {
+    return {};
+  }
+
   render(hass) {
     const locationCityState = hass.states["sensor.home_location_city"];
     const locationCountryState = hass.states["sensor.home_location_country"];
@@ -123,6 +131,14 @@ class WeatherIndexCard extends HTMLElement {
       1: "Low",
     };
 
+    const newMapping = {
+      5: "Extreme",
+      4: "Very High",
+      3: "High",
+      2: "Moderate",
+      1: "Low",
+    };
+
     const getColorBySeverity = (severity) => {
       switch (severity) {
         case 5:
@@ -164,7 +180,7 @@ class WeatherIndexCard extends HTMLElement {
       },
       {
         sensor: "sensor.home_common_cold_forecast",
-        icon: "mdi:snowflake-thermometer",
+        icon: "mdi:face-mask",
         name: "Common Cold",
       },
       {
@@ -184,13 +200,18 @@ class WeatherIndexCard extends HTMLElement {
       },
       {
         sensor: "sensor.home_dust_dander_forecast",
-        icon: "mdi:air-filter",
+        icon: "mdi:cloud-alert",
         name: "Dust & Dander",
       },
     ];
 
     const groupedSensors = {
       "Arthritis Pain Forecast": [
+        "sensor.home_arthritis_pain_forecast_6",
+        "sensor.home_arthritis_pain_forecast_7",
+        "sensor.home_arthritis_pain_forecast_8",
+        "sensor.home_arthritis_pain_forecast_9",
+        "sensor.home_arthritis_pain_forecast_10",
         "sensor.home_arthritis_pain_forecast",
         "sensor.home_arthritis_pain_forecast_2",
         "sensor.home_arthritis_pain_forecast_3",
@@ -198,6 +219,11 @@ class WeatherIndexCard extends HTMLElement {
         "sensor.home_arthritis_pain_forecast_5",
       ],
       "Asthma Forecast": [
+        "sensor.home_asthma_forecast_6",
+        "sensor.home_asthma_forecast_7",
+        "sensor.home_asthma_forecast_8",
+        "sensor.home_asthma_forecast_9",
+        "sensor.home_asthma_forecast_10",
         "sensor.home_asthma_forecast",
         "sensor.home_asthma_forecast_2",
         "sensor.home_asthma_forecast_3",
@@ -205,6 +231,11 @@ class WeatherIndexCard extends HTMLElement {
         "sensor.home_asthma_forecast_5",
       ],
       "Common Cold Forecast": [
+        "sensor.home_common_cold_forecast_6",
+        "sensor.home_common_cold_forecast_7",
+        "sensor.home_common_cold_forecast_8",
+        "sensor.home_common_cold_forecast_9",
+        "sensor.home_common_cold_forecast_10",
         "sensor.home_common_cold_forecast",
         "sensor.home_common_cold_forecast_2",
         "sensor.home_common_cold_forecast_3",
@@ -212,6 +243,11 @@ class WeatherIndexCard extends HTMLElement {
         "sensor.home_common_cold_forecast_5",
       ],
       "Flu Forecast": [
+        "sensor.home_flu_forecast_10",
+        "sensor.home_flu_forecast_9",
+        "sensor.home_flu_forecast_8",
+        "sensor.home_flu_forecast_7",
+        "sensor.home_flu_forecast_6",
         "sensor.home_flu_forecast",
         "sensor.home_flu_forecast_2",
         "sensor.home_flu_forecast_3",
@@ -219,6 +255,11 @@ class WeatherIndexCard extends HTMLElement {
         "sensor.home_flu_forecast_5",
       ],
       "Migraine Headache Forecast": [
+        "sensor.home_migraine_headache_forecast_10",
+        "sensor.home_migraine_headache_forecast_9",
+        "sensor.home_migraine_headache_forecast_8",
+        "sensor.home_migraine_headache_forecast_7",
+        "sensor.home_migraine_headache_forecast_6",
         "sensor.home_migraine_headache_forecast",
         "sensor.home_migraine_headache_forecast_2",
         "sensor.home_migraine_headache_forecast_3",
@@ -226,6 +267,11 @@ class WeatherIndexCard extends HTMLElement {
         "sensor.home_migraine_headache_forecast_5",
       ],
       "Healthy Heart Fitness Forecast": [
+        "sensor.home_healthy_heart_fitness_forecast_10",
+        "sensor.home_healthy_heart_fitness_forecast_9",
+        "sensor.home_healthy_heart_fitness_forecast_8",
+        "sensor.home_healthy_heart_fitness_forecast_7",
+        "sensor.home_healthy_heart_fitness_forecast_6",
         "sensor.home_healthy_heart_fitness_forecast",
         "sensor.home_healthy_heart_fitness_forecast_2",
         "sensor.home_healthy_heart_fitness_forecast_3",
@@ -233,6 +279,11 @@ class WeatherIndexCard extends HTMLElement {
         "sensor.home_healthy_heart_fitness_forecast_5",
       ],
       "Dust and Dander Forecast": [
+        "sensor.home_dust_dander_forecast_10",
+        "sensor.home_dust_dander_forecast_9",
+        "sensor.home_dust_dander_forecast_8",
+        "sensor.home_dust_dander_forecast_7",
+        "sensor.home_dust_dander_forecast_6",
         "sensor.home_dust_dander_forecast",
         "sensor.home_dust_dander_forecast_2",
         "sensor.home_dust_dander_forecast_3",
@@ -245,15 +296,21 @@ class WeatherIndexCard extends HTMLElement {
       const state = hass.states[sensor];
       const stateStr = state ? state.state : "unavailable";
       const numericValue = enumMapping[stateStr] || 0;
+      const newValue = newMapping[numericValue] || 0;
+      const text = state ? state.attributes.Text : "No data available";
+      console.info(`Processing sensor: ${sensor}`);
+      console.info(`State string: ${stateStr}, Numeric value: ${numericValue}`);
       const borderColor =
         datasetColorMapping[name] || datasetColorMapping.default; // Default to gray if no match
       return {
         name: name,
         value: stateStr,
         numericValue: numericValue,
+        newValue: newValue,
+        text: text,
         icon: icon || "mdi:weather-cloudy",
         color: getColorBySeverity(numericValue),
-        borderColor: borderColor, // Use dataset color
+        borderColor: borderColor,
       };
     });
 
@@ -273,7 +330,7 @@ class WeatherIndexCard extends HTMLElement {
     const generateDateLabels = (numDays) => {
       const today = new Date();
       const labels = [];
-      for (let i = 0; i < numDays; i++) {
+      for (let i = -5; i < 5; i++) {
         const date = new Date(today);
         date.setDate(today.getDate() + i);
         labels.push(
@@ -283,7 +340,7 @@ class WeatherIndexCard extends HTMLElement {
       return labels;
     };
 
-    const date_labels = generateDateLabels(5);
+    const date_labels = generateDateLabels(10);
 
     this.innerHTML = `
       <style>
@@ -293,7 +350,7 @@ class WeatherIndexCard extends HTMLElement {
       align-items: center;
       justify-content: center;
       padding: 10px;
-      margin-bottom: 10px;
+      margin: 40px 0 10px 0; /* Add top margin */
       border-radius: 10px;
       box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
       background: linear-gradient(135deg, rgba(135, 206, 235, 0.9), rgba(255, 182, 193, 0.8));
@@ -306,7 +363,7 @@ class WeatherIndexCard extends HTMLElement {
 
     .location {
       font-size: 16px;
-      margin-bottom: 4px;
+      margin-bottom: 2px;
     }
 
     .date {
@@ -333,47 +390,100 @@ class WeatherIndexCard extends HTMLElement {
     margin-bottom: 16px;
   }
 
-  .today-icon-box {
-    padding: 20px;
-    text-align: center;
-    border-radius: 20px;
-    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
-    color: white;
-    background: var(--icon-color, rgba(0, 0, 0, 0.7));
-    transition: box-shadow 0.2s ease-in-out, transform 0.2s ease-in-out;
-  }
+.text-box {
+  padding: 15px; /* Add space inside the box */
+  margin: 0px auto; /* Center the box */
+  width: 90%; /* Adjust the width */
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.2), rgba(200, 200, 200, 0.5)); /* Subtle gradient */
+  border-radius: 10px; /* Rounded corners */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); /* Drop shadow for depth */
+  font-size: 14px; /* Adjust font size for readability */
+  font-weight: 400; /* Medium font weight */
+  color: white; /* White text color */
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5); /* Text shadow for clarity */
+  line-height: 1.5; /* Line spacing for readability */
+  text-align: left; /* Align text to the left */
+  overflow: hidden; /* Handle text overflow */
+  animation: fadeIn 1s ease-in-out; /* Fade-in animation */
+}
 
-  .today-icon-box:hover {
-    transform: scale(1.03);
-    box-shadow: 0 5px 10px rgba(0, 0, 0, 0.3);
-  }
 
-  .icon {
-    margin: 0 auto;
-    font-size: 38px;
-    width: 40px;
-    height: 40px;
-    background: rgba(255, 255, 255, 0.3);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  }
 
-  .today-name {
-    font-size: 16px;
-    font-weight: bold;
-    margin-top: 6px;
-    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
-  }
+.today-icon-box {
+          padding: 20px;
+          text-align: center;
+          border-radius: 20px;
+          box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
+          color: white;
+          background: var(--icon-color, rgba(0, 0, 0, 0.7));
+          transition: box-shadow 0.2s ease-in-out, transform 0.2s ease-in-out;
+          position: relative;
+        }
 
-  .today-label {
-    font-size: 14px;
-    font-weight: 300;
-    margin-top: 2px;
-    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
-  }
+.tooltip {
+  position: absolute;
+  bottom: 30%;
+  left: 80%;
+  transform: translateX(-50%);
+  padding: 8px 12px;
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.9);
+  color: white;
+  font-size: 10px;
+  line-height: 1.0;
+  visibility: hidden;
+  opacity: 0;
+  transition: opacity 0.2s ease-in-out, transform 0.2s ease-in-out;
+  z-index: 10;
+  max-width: 600px;
+  text-align: center;
+  white-space: normal;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+}
+
+.tooltip::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border-width: 6px;
+  border-style: solid;
+  border-color: rgba(0, 0, 0, 0.9) transparent transparent transparent;
+}
+
+.today-icon-box:hover .tooltip {
+  visibility: visible;
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+
+
+        .icon {
+          margin: 0 auto;
+          font-size: 38px;
+          width: 50px;
+          height: 50px;
+          background: rgba(255, 255, 255, 0.3);
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .today-name {
+          font-size: 16px;
+          font-weight: bold;
+          margin-top: 6px;
+        }
+
+        .today-label {
+          font-size: 14px;
+          font-weight: 500;
+          margin-top: 4px;
+          color: rgba(255, 255, 255, 0.9);
+        }
 
         .forecast-chart {
           width: 100%;
@@ -385,31 +495,79 @@ class WeatherIndexCard extends HTMLElement {
         <div class="location">${locationCity}, ${locationCountry}</div>
         <div class="date">${formattedDate}</div>
       </div>
-      <div class="weather-index-card">
+
+     <div class="weather-index-card">
         ${todayIndices
           .map(
             (index) => `
-            <div class="today-icon-box"
-     style="background: ${index.color}; --icon-color: ${index.color}; border: 12px solid ${index.borderColor};">
-  <div class="icon">
+            <div
+              class="today-icon-box"
+              style="background: ${index.color}; --icon-color: ${index.color};"
+              title="${index.text}"
+            >
+              <div class="icon">
+                <ha-icon icon="${index.icon}"></ha-icon>
+              </div>
+              <div class="today-name">${index.name}</div>
+              <div class="today-label">${index.newValue}</div>
 
-              <ha-icon icon="${index.icon}"></ha-icon>
             </div>
-            <div class="today-name">${index.name}</div>
-            <div class="today-label">${index.value}</div>
-          </div>
         `,
           )
           .join("")}
       </div>
       <canvas id="forecastChart" class="forecast-chart"></canvas>
+        <div class="text-box">
+  ${todayIndices.map((index) => `${index.name}: ${index.text}`).join("<br>")}
+</div>
     `;
 
     // Render the chart after the DOM is updated
     setTimeout(() => {
       const ctx = this.querySelector("#forecastChart").getContext("2d");
+      const verticalLinePlugin = {
+        getLinePosition: function (chart, pointIndex) {
+          const meta = chart.getDatasetMeta(0);
+          const data = meta.data;
+          return data[pointIndex].x;
+        },
+
+        renderVerticalLine: function (chartInstance, pointIndex) {
+          const linePosition = this.getLinePosition(chartInstance, pointIndex);
+          const nextPointOffset = this.getLinePosition(
+            chartInstance,
+            pointIndex + 1,
+          );
+          const scale = chartInstance.scales.y;
+          const context = chartInstance.ctx;
+
+          context.beginPath();
+          context.strokeStyle = "#fff584";
+          context.setLineDash([5, 5]);
+          context.moveTo(linePosition, scale.top);
+          context.lineTo(linePosition, scale.bottom);
+          context.stroke();
+
+          context.fillStyle = "#fff584";
+          context.textAlign = "center";
+          context.fillText(
+            "Today",
+            linePosition + (nextPointOffset - linePosition) * 0.25,
+            (scale.bottom - scale.top) * 0.1,
+          );
+        },
+
+        beforeDatasetsDraw: function (chart, easing) {
+          if (chart.config._config.lineAtIndex)
+            chart.config._config.lineAtIndex.forEach((pointIndex) =>
+              this.renderVerticalLine(chart, pointIndex),
+            );
+        },
+      };
       new Chart(ctx, {
         type: "line",
+        plugins: [verticalLinePlugin],
+        lineAtIndex: [5],
         data: {
           labels: date_labels,
           datasets: [
@@ -478,10 +636,10 @@ class WeatherIndexCard extends HTMLElement {
                 usePointStyle: true,
                 pointStyle: "circle",
                 position: "bottom",
-                color: "white", // Label color
+                color: "white",
                 font: {
-                  size: 14, // Font size
-                  weight: "bold", // Font weight
+                  size: 14,
+                  weight: "bold",
                 },
               },
             },
@@ -493,6 +651,18 @@ class WeatherIndexCard extends HTMLElement {
               title: {
                 display: true,
                 text: "Days",
+                color: "white",
+                font: {
+                  size: 16,
+                  weight: "bold",
+                },
+              },
+              ticks: {
+                color: "white",
+                font: {
+                  size: 14,
+                  weight: "bold",
+                },
               },
             },
             y: {
@@ -501,9 +671,19 @@ class WeatherIndexCard extends HTMLElement {
               title: {
                 display: true,
                 text: "Risk Level",
+                color: "white",
+                font: {
+                  size: 16,
+                  weight: "bold",
+                },
               },
               ticks: {
                 stepSize: 1,
+                color: "white",
+                font: {
+                  size: 14,
+                  weight: "bold",
+                },
               },
             },
           },
@@ -516,14 +696,6 @@ class WeatherIndexCard extends HTMLElement {
     if (!config) {
       throw new Error("Invalid configuration");
     }
-  }
-
-  static getConfigElement() {
-    return document.createElement("hui-generic-entity-row");
-  }
-
-  static getStubConfig() {
-    return {};
   }
 
   getCardSize() {
