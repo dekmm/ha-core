@@ -6,8 +6,6 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
 import logging
-
-_LOGGER = logging.getLogger(__name__)
 from typing import Any, cast
 
 from homeassistant.components.sensor import (
@@ -50,6 +48,8 @@ from .coordinator import (
     AccuWeatherLocationDataUpdateCoordinator,
     AccuWeatherObservationDataUpdateCoordinator,
 )
+
+_LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 1
 
@@ -712,7 +712,7 @@ class AccuWeatherIndexSensor(
         forecast_date = datetime.strptime(
             self._sensor_data["LocalDateTime"], "%Y-%m-%d"
         ).date()
-        return (forecast_date - today).days
+        return (today - forecast_date).days + 5
 
     @property
     def native_value(self) -> str | int | float | None:
