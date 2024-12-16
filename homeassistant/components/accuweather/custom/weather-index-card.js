@@ -108,29 +108,6 @@ class WeatherIndexCard extends HTMLElement {
       Low: 1,
     };
 
-    const reverseMapping = {
-      5: "At Extreme Risk",
-      4: "At High Risk",
-      3: "At Risk",
-      2: "Neutral",
-      1: "Beneficial",
-      0: "unavailable",
-
-      // Healthy Heart Fitness Forecast
-      1: "Excellent",
-      2: "Very Good",
-      3: "Good",
-      4: "Fair",
-      5: "Poor",
-
-      // Dust and Dander Forecast
-      5: "Extreme",
-      4: "Very High",
-      3: "High",
-      2: "Moderate",
-      1: "Low",
-    };
-
     const newMapping = {
       5: "Extreme",
       4: "Very High",

@@ -17,7 +17,6 @@ from homeassistant.helpers.update_coordinator import (
     UpdateFailed,
 )
 
-from . import notification
 from .api import AccuWeatherExt, IndexGroup, IndexRange
 from .const import DOMAIN, MANUFACTURER
 from .db import AccuWeatherIndexGroupDataStore
@@ -147,34 +146,34 @@ class AccuWeatherIndexGroupDataUpdateCoordinator(
 
             _LOGGER.debug("Merged data: %s", merged_data)
 
-            return merged_data
         except EXCEPTIONS as error:
             _LOGGER.error("Error fetching data: %s", error)
             raise UpdateFailed(error) from error
+        else:
+            return merged_data
 
     async def _fetch_database_data(self) -> list[dict[str, dict[str, Any]]]:
         """Fetch the last five days of data from the database."""
-        try:
-            today = datetime.now()
-            start_date = (today - timedelta(days=5)).strftime("%Y-%m-%d")
-            end_date = (today - timedelta(days=1)).strftime("%Y-%m-%d")
-
-            database_data = await self.index_data_store.async_query_data_range(
-                self.location_key, start_date, end_date
-            )
-
-            _LOGGER.debug("Fetched database data: %s", database_data)
-            return database_data
-        except Exception as e:
-            _LOGGER.error("Failed to fetch database data: %s", e)
+        if not self.location_key:
+            _LOGGER.error("Location key is not set")
             return []
+        today = datetime.now()
+        start_date = (today - timedelta(days=5)).strftime("%Y-%m-%d")
+        end_date = (today - timedelta(days=1)).strftime("%Y-%m-%d")
+
+        database_data = await self.index_data_store.async_query_data_range(
+            self.location_key, start_date, end_date
+        )
+
+        _LOGGER.debug("Fetched database data: %s", database_data)
+        return database_data
 
     @staticmethod
     def _format_database_data(
         database_data: list[dict[str, Any]],
     ) -> list[dict[str, dict[str, Any]]]:
         """Transform database data to match the API data structure."""
-        formatted_data = defaultdict(dict)
+        formatted_data: defaultdict[str, dict[str, dict[str, Any]]] = defaultdict(dict)
         for entry in database_data:
             date = entry["LocalDateTime"]
             index_group = entry["index_group"]
@@ -187,7 +186,7 @@ class AccuWeatherIndexGroupDataUpdateCoordinator(
             }
 
         # Convert to a list of dicts, one per day
-        return [day_data for day_data in formatted_data.values()]
+        return list(formatted_data.values())
 
     @staticmethod
     def _merge_data(
@@ -221,84 +220,6 @@ class AccuWeatherIndexGroupDataUpdateCoordinator(
                 merged_data.append(db_day)
 
         return merged_data
-
-
-# class AccuWeatherIndexGroupDataUpdateCoordinator(
-#     TimestampDataUpdateCoordinator[list[dict[str, dict[str, Any]]]]
-# ):
-#     """Class to manage fetching AccuWeather data API and database."""
-
-#     def __init__(
-#         self,
-#         hass: HomeAssistant,
-#         accuweather: AccuWeatherExt,
-#         name: str,
-#         coordinator_type: str,
-#         update_interval: timedelta,
-#         index_data_store: AccuWeatherIndexGroupDataStore,
-#         index_id: IndexGroup,
-#         index_range: IndexRange = IndexRange.ONE_DAY,
-#     ) -> None:
-#         """Initialize."""
-#         self.accuweather = accuweather
-#         self.location_key = accuweather.location_key
-
-#         if TYPE_CHECKING:
-#             assert self.location_key is not None
-
-#         self.device_info = _get_device_info(self.location_key, name)
-
-#         self.index_id = index_id
-#         self.index_range = index_range
-#         self.index_data_store = index_data_store
-
-#         super().__init__(
-#             hass,
-#             _LOGGER,
-#             name=f"{name} ({coordinator_type})",
-#             update_interval=update_interval,
-#         )
-
-#     async def _async_update_data(self) -> list[dict[str, dict[str, Any]]]:
-#         """Update data via library."""
-#         try:
-#             _LOGGER.debug(
-#                 "Starting data fetch for index ID: %s, range: %s",
-#                 self.index_id,
-#                 self.index_range,
-#             )
-
-#             async with timeout(10):
-#                 result = await self.accuweather.async_get_index_group_data(
-#                     self.index_id, self.index_range
-#                 )
-
-#             _LOGGER.debug("Fetched API data: %s", result)
-
-#             if TYPE_CHECKING:
-#                 assert self.location_key is not None
-
-#             for day in result:
-#                 _LOGGER.debug("Processing data for day: %s", day)
-#                 for index, data in day.items():
-#                     _LOGGER.debug("Index: %s, Data: %s", index, data)
-#                     await self.index_data_store.async_insert_data(
-#                         self.location_key,
-#                         index,
-#                         data["Value"],
-#                         data["Category"],
-#                         data["CategoryValue"],
-#                         data["LocalDateTime"],
-#                         data["Text"],
-#                     )
-#                     _LOGGER.debug("Inserted data for index: %s", index)
-
-#         except EXCEPTIONS as error:
-#             _LOGGER.error("Error fetching data: %s", error)
-#             raise UpdateFailed(error) from error
-
-#         _LOGGER.debug("Requests remaining: %d", self.accuweather.requests_remaining)
-#         return result
 
 
 class AccuWeatherDailyForecastDataUpdateCoordinator(
